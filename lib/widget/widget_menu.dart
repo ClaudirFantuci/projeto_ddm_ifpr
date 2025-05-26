@@ -17,14 +17,14 @@ class WidgetMenu extends StatelessWidget {
     List<String> horarios = ["08:00", "10:00", "15:00", "18:00"];
 
     return Scaffold(
-      backgroundColor: Colors.black, // Fundo preto
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.amber,
         title: const Text('Menu', style: TextStyle(color: Colors.black)),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       drawer: Drawer(
-        backgroundColor: Colors.black, // Fundo do Drawer preto
+        backgroundColor: Colors.black,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [

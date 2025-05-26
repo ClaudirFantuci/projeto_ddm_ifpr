@@ -12,7 +12,7 @@ class WidgetListaAcademias extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.black, // Fundo preto
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.amber,
         title: const Text(
