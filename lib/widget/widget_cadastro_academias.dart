@@ -6,12 +6,12 @@ class WidgetCadastroAcademias extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Fundo preto
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.amber, // AppBar âmbar
+        backgroundColor: Colors.amber,
         title: const Text(
           'Cadastro de Academias',
-          style: TextStyle(color: Colors.black), // Texto preto
+          style: TextStyle(color: Colors.black),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
