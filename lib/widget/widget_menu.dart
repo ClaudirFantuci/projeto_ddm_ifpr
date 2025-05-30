@@ -43,10 +43,34 @@ class WidgetMenu extends StatelessWidget {
               rotulo: 'Cadastro de Academias',
               rota: Rotas.cadastroAcademias,
             ),
-            criarMenu(rotulo: 'Cadastro de Alunos', rota: Rotas.cadastroAlunos),
-            criarMenu(rotulo: 'Lista de Academias', rota: Rotas.listaAcademias),
-            criarMenu(rotulo: 'Lista de Alunos', rota: Rotas.listaAlunos),
-            criarMenu(rotulo: 'Novo Agendamento', rota: Rotas.agendamento),
+            criarMenu(
+              rotulo: 'Cadastro de Alunos',
+              rota: Rotas.cadastroAlunos,
+            ),
+            criarMenu(
+              rotulo: 'Cadastro de Objetivos',
+              rota: Rotas.cadastroObjetivos,
+            ),
+            criarMenu(
+              rotulo: 'Cadastro de Exercícios',
+              rota: Rotas.cadastroExercicios,
+            ),
+            criarMenu(
+              rotulo: 'Cadastro de Treinos',
+              rota: Rotas.cadastroTreinos,
+            ),
+            criarMenu(
+              rotulo: 'Lista de Academias',
+              rota: Rotas.listaAcademias,
+            ),
+            criarMenu(
+              rotulo: 'Lista de Alunos',
+              rota: Rotas.listaAlunos,
+            ),
+            criarMenu(
+              rotulo: 'Novo Agendamento',
+              rota: Rotas.agendamento,
+            ),
           ],
         ),
       ),
@@ -66,7 +90,6 @@ class WidgetMenu extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-
             const Padding(
               padding: EdgeInsets.only(bottom: 16.0),
               child: Text(
@@ -79,7 +102,6 @@ class WidgetMenu extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-
             Expanded(
               child: ListView.builder(
                 itemCount: horarios.length,
