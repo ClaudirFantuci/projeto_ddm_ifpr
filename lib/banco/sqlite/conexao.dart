@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_application_1/banco/sqlite/script.dart';
+import 'package:projeto_ddm_ifpr/banco/sqlite/script.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -26,7 +26,7 @@ class Conexao {
           for (final sql in criarTabelas) {
             await db.execute(sql);
           }
-          for (final insert in insertFabricantes) {
+          for (final insert in insertAcademias) {
             await db.execute(insert);
           }
         },
