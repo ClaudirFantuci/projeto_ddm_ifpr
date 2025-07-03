@@ -20,7 +20,7 @@ class WidgetMenu extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.amber,
-        title: const Text('Tenho uma piroquinha', style: TextStyle(color: Colors.black)),
+        title: const Text('Bem-vindo', style: TextStyle(color: Colors.black)),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       drawer: Drawer(
