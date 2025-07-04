@@ -1,16 +1,43 @@
-# projeto_ddm_ifpr
 
-A new Flutter project.
+## Visão Geral
 
-## Getting Started
+O projeto é um aplicativo móvel desenvolvido como projeto da disciplina de Desenvolvimento para Dispositivos Móveis no IFPR Campus Paranavaí. O objetivo do aplicativo é auxiliar personal trainers no gerenciamento de seus alunos e aulas ao longo da semana, proporcionando uma ferramenta prática para organizar academias, equipamentos, exercícios, treinos e agendamentos.
 
-This project is a starting point for a Flutter application.
+O aplicativo foi construído utilizando **Flutter** e **sqflite** para gerenciamento de banco de dados local, oferecendo uma interface amigável e funcionalidades essenciais para o controle eficiente das atividades de treinamento.
 
-A few resources to get you started if this is your first Flutter project:
+## Objetivo
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+O projeto visa facilitar a rotina de personal trainers, permitindo:
+- Cadastro e gerenciamento de academias, equipamentos, exercícios e treinos.
+- Organização de agendamentos de aulas para os alunos.
+- Visualização e edição de informações em uma interface intuitiva e consistente.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Funcionalidades
+
+- **Gerenciamento de Academias**:
+  - Cadastro e edição de academias com informações como nome, endereço, telefone e cidade.
+  - Listagem de academias com opções para editar ou excluir.
+- **Gerenciamento de Equipamentos**:
+  - Cadastro e edição de equipamentos de musculação (ex.: Halteres, Barra Olímpica).
+  - Listagem com opções de edição e exclusão, com confirmação para exclusão.
+- **Gerenciamento de Exercícios**:
+  - Cadastro de exercícios com nome e equipamento associado (via dropdown).
+  - Integração futura com banco de dados para equipamentos.
+- **Gerenciamento de Treinos e Agendamentos**:
+  - Cadastro de treinos e agendamentos (em desenvolvimento).
+  - Planejamento de aulas semanais para alunos.
+- **Observação**: Outras funcionalidades serão adicionadas.
+
+## Tecnologias Utilizadas
+
+- **Flutter**: Framework para desenvolvimento da interface do aplicativo.
+- **sqflite**: Banco de dados SQLite para armazenamento local de dados.
+- **Dart**: Linguagem de programação para lógica do aplicativo.
+- **Material Design**: Componentes visuais para uma interface amigável.
+- 
+## Pré-requisitos
+
+- **Flutter SDK**: Versão 3.0.0 ou superior.
+- **Dart**: Incluído com o Flutter.
+- **Dispositivo/Emulador**: Android ou iOS para testes.
+- **IDE**: Recomenda-se Visual Studio Code ou Android Studio.
