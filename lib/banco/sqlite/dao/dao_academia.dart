@@ -42,7 +42,7 @@ class DAOAcademia {
   }
 
   Future<void> salvar(DTOAcademia dto) async {
-    final db = await Conexao.get();
+    final db = await ConexaoSQLite.database;
     try {
       await db.rawInsert(_sqlSalvar, [
         dto.id != null ? int.tryParse(dto.id!) : null,
@@ -58,7 +58,7 @@ class DAOAcademia {
   }
 
   Future<List<DTOAcademia>> consultarTodos() async {
-    final db = await Conexao.get();
+    final db = await ConexaoSQLite.database;
     try {
       final List<Map<String, dynamic>> maps =
           await db.rawQuery(_sqlConsultarTodos);
@@ -69,7 +69,7 @@ class DAOAcademia {
   }
 
   Future<DTOAcademia?> consultarPorId(int id) async {
-    final db = await Conexao.get();
+    final db = await ConexaoSQLite.database;
     try {
       final List<Map<String, dynamic>> maps =
           await db.rawQuery(_sqlConsultarPorId, [id]);
@@ -83,7 +83,7 @@ class DAOAcademia {
   }
 
   Future<void> excluir(int id) async {
-    final db = await Conexao.get();
+    final db = await ConexaoSQLite.database;
     try {
       await db.rawDelete(_sqlExcluir, [id]);
     } catch (e) {

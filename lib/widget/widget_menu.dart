@@ -52,6 +52,10 @@ class WidgetMenu extends StatelessWidget {
               rota: Rotas.cadastroObjetivos,
             ),
             criarMenu(
+              rotulo: 'Cadastro de Equipamentos',
+              rota: Rotas.cadastroEquipamento,
+            ),
+            criarMenu(
               rotulo: 'Cadastro de Exercícios',
               rota: Rotas.cadastroExercicios,
             ),
@@ -62,6 +66,10 @@ class WidgetMenu extends StatelessWidget {
             criarMenu(
               rotulo: 'Lista de Academias',
               rota: Rotas.listaAcademias,
+            ),
+            criarMenu(
+              rotulo: 'Lista de Equipamentos',
+              rota: Rotas.listaEquipamentos,
             ),
             criarMenu(
               rotulo: 'Lista de Alunos',

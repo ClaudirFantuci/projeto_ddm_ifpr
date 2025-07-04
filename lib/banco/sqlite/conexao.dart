@@ -1,40 +1,78 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:projeto_ddm_ifpr/banco/sqlite/script.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:path/path.dart';
+import 'script.dart';
 
-class Conexao {
-  static Database? _db;
+class ConexaoSQLite {
+  static Database? _database;
 
-  static Future<Database> get() async {
-    if (_db != null) return _db!;
+  // Método singleton para obter a instância do banco
+  static Future<Database> get database async {
+    if (_database != null) return _database!;
 
-    try {
-      if (kIsWeb) {
-        databaseFactory = databaseFactoryFfiWeb;
-      }
+    _database = await _inicializarBanco();
+    return _database!;
+  }
 
-      final path = join(await getDatabasesPath(), 'banco.db');
-      // await deleteDatabase(path); // Comment out to persist data
+  static Future<Database> _inicializarBanco() async {
+    // Configurar para diferentes plataformas
+    if (kIsWeb) {
+      // Web
+      databaseFactory = databaseFactoryFfiWeb;
+    } else if (Platform.isWindows || Platform.isLinux) {
+      // Desktop
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+    // Mobile usa o sqflite padrão
 
-      _db = await openDatabase(
-        path,
+    // Caminho do banco
+    String path;
+    if (kIsWeb) {
+      path = 'banco.db.db';
+    } else {
+      String databasesPath = await databaseFactory.getDatabasesPath();
+      path = join(databasesPath, 'banco.db.db');
+    }
+    deleteDatabase(path);
+
+    // Abrir ou criar banco
+    return await databaseFactory.openDatabase(
+      path,
+      options: OpenDatabaseOptions(
         version: 1,
-        onCreate: (db, version) async {
-          for (final sql in criarTabelas) {
-            await db.execute(sql);
-          }
-          for (final insert in insertAcademias) {
-            await db.execute(insert);
-          }
-        },
-      );
+        onCreate: _criarTabelas,
+        onUpgrade: _atualizarBanco,
+      ),
+    );
+  }
 
-      return _db!;
-    } catch (e) {
-      throw Exception('Erro ao abrir o banco de dados: $e');
+  static Future<void> _criarTabelas(Database db, int version) async {
+    // Criar todas as tabelas
+    for (String comando in ScriptSQLite.comandosCriarTabelas) {
+      await db.execute(comando);
+    }
+
+    // Inserir dados iniciais
+    for (List<String> insercoes in ScriptSQLite.comandosInsercoes) {
+      for (String comando in insercoes) {
+        await db.execute(comando);
+      }
+    }
+  }
+
+  static Future<void> _atualizarBanco(
+      Database db, int oldVersion, int newVersion) async {
+    // Lógica para atualizações futuras
+  }
+
+  // Método para fechar conexão
+  static Future<void> fecharConexao() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
     }
   }
 }
