@@ -12,8 +12,12 @@ import 'package:projeto_ddm_ifpr/widget/widget_cadastro_alunos.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_objetivos.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_exercicios.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_treinos.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_exercicios.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/widgete_listaobjetivos.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_academia.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_equipamento.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_objetivo.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_exercicio.dart';
 // FAZER: import widget_detalhes_agendamento.dart
 
 class Aplicativo extends StatelessWidget {
@@ -37,19 +41,21 @@ class Aplicativo extends StatelessWidget {
             return MaterialPageRoute(
                 builder: (_) => const WidgetCadastroAlunos());
           case Rotas.cadastroObjetivos:
+            final objetivo = settings.arguments as DTOObjetivo?;
             return MaterialPageRoute(
-                builder: (_) => const WidgetCadastroObjetivos());
+                builder: (_) => WidgetCadastroObjetivos(objetivo: objetivo));
           case Rotas.cadastroExercicios:
+            final exercicio = settings.arguments as DTOExercicio?;
             return MaterialPageRoute(
-                builder: (_) => const WidgetCadastroExercicios());
+                builder: (_) => WidgetCadastroExercicios(exercicio: exercicio));
+          case Rotas.cadastroTreinos:
+            return MaterialPageRoute(
+                builder: (_) => const WidgetCadastroTreinos());
           case Rotas.cadastroEquipamento:
             final equipamento = settings.arguments as DTOEquipamento?;
             return MaterialPageRoute(
                 builder: (_) =>
                     WidgetCadastroEquipamentos(equipamento: equipamento));
-          case Rotas.cadastroTreinos:
-            return MaterialPageRoute(
-                builder: (_) => const WidgetCadastroTreinos());
           case Rotas.listaAcademias:
             return MaterialPageRoute(
                 builder: (_) => const WidgetListaAcademias());
@@ -57,6 +63,12 @@ class Aplicativo extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ListaEquipamentos());
           case Rotas.listaAlunos:
             return MaterialPageRoute(builder: (_) => const WidgetListaAlunos());
+          case Rotas.listaObjetivos:
+            return MaterialPageRoute(
+                builder: (_) => const WidgetListaObjetivos());
+          case Rotas.listaExercicios:
+            return MaterialPageRoute(
+                builder: (_) => const WidgetListaExercicios());
           case Rotas.agendamento:
             return MaterialPageRoute(builder: (_) => const WidgetAgendamento());
           // FAZER: case Rotas.detalhesAgendamento:

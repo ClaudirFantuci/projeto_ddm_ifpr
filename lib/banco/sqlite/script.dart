@@ -17,9 +17,26 @@ class ScriptSQLite {
     )
   ''';
 
+  static const String _criarTabelaObjetivo = '''
+    CREATE TABLE objetivo (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL
+    )
+  ''';
+
+  static const String _criarTabelaExercicio = '''
+    CREATE TABLE exercicio (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      equipamento TEXT NOT NULL
+    )
+  ''';
+
   static const List<String> comandosCriarTabelas = [
     _criarTabelaAcademia,
     _criarTabelaEquipamento,
+    _criarTabelaObjetivo,
+    _criarTabelaExercicio,
   ];
 
   static const List<String> _insercoesAcademia = [
@@ -39,8 +56,26 @@ class ScriptSQLite {
     "INSERT INTO equipamento (nome) VALUES ('Esteira')",
   ];
 
+  static const List<String> _insercoesObjetivo = [
+    "INSERT INTO objetivo (nome) VALUES ('Perder peso')",
+    "INSERT INTO objetivo (nome) VALUES ('Ganhar massa muscular')",
+    "INSERT INTO objetivo (nome) VALUES ('Melhorar condicionamento físico')",
+    "INSERT INTO objetivo (nome) VALUES ('Aumentar flexibilidade')",
+    "INSERT INTO objetivo (nome) VALUES ('Reduzir estresse')",
+  ];
+
+  static const List<String> _insercoesExercicio = [
+    "INSERT INTO exercicio (nome, equipamento) VALUES ('Supino reto', 'Banco de supino')",
+    "INSERT INTO exercicio (nome, equipamento) VALUES ('Agachamento livre', 'Barra olímpica')",
+    "INSERT INTO exercicio (nome, equipamento) VALUES ('Flexão de braço', 'Nenhum')",
+    "INSERT INTO exercicio (nome, equipamento) VALUES ('Puxada alta', 'Máquina de puxada')",
+    "INSERT INTO exercicio (nome, equipamento) VALUES ('Abdominal crunch', 'Máquina de abdominal')",
+  ];
+
   static const List<List<String>> comandosInsercoes = [
     _insercoesAcademia,
     _insercoesEquipamento,
+    _insercoesObjetivo,
+    _insercoesExercicio,
   ];
 }

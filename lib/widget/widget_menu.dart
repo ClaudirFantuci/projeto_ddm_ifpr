@@ -76,6 +76,14 @@ class WidgetMenu extends StatelessWidget {
               rota: Rotas.listaAlunos,
             ),
             criarMenu(
+              rotulo: 'Lista de Objetivos',
+              rota: Rotas.listaObjetivos,
+            ),
+            criarMenu(
+              rotulo: 'Lista de Exercícios',
+              rota: Rotas.listaExercicios,
+            ),
+            criarMenu(
               rotulo: 'Novo Agendamento',
               rota: Rotas.agendamento,
             ),

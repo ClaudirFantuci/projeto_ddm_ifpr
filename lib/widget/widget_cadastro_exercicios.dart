@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_ddm_ifpr/banco/sqlite/dao/dao_exercicio.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_exercicio.dart';
 
-// Mock equipment list (to be replaced with SQLite query in the future)
-const List<String> mockEquipments = [
-  'Nenhum',
-  'Halteres',
-  'Barra',
-  'Máquina de Smith',
-  'Cabo',
-  'Banco',
-  'Kettlebell',
-];
-
 class WidgetCadastroExercicios extends StatefulWidget {
-  const WidgetCadastroExercicios({super.key});
+  final DTOExercicio? exercicio;
+
+  const WidgetCadastroExercicios({super.key, this.exercicio});
 
   @override
   State<WidgetCadastroExercicios> createState() =>
@@ -23,27 +15,56 @@ class WidgetCadastroExercicios extends StatefulWidget {
 class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
-  String? _selectedEquipment;
+  final _equipamentoController = TextEditingController();
+  final _dao = DAOExercicio();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.exercicio != null) {
+      _nomeController.text = widget.exercicio!.nome;
+      _equipamentoController.text = widget.exercicio!.equipamento;
+    }
+  }
 
   @override
   void dispose() {
     _nomeController.dispose();
+    _equipamentoController.dispose();
     super.dispose();
   }
 
-  void _saveExercise() {
+  Future<void> _salvar() async {
     if (_formKey.currentState!.validate()) {
       final exercicio = DTOExercicio(
+        id: widget.exercicio?.id,
         nome: _nomeController.text,
-        equipamento:
-            _selectedEquipment != null && _selectedEquipment != 'Nenhum'
-                ? _selectedEquipment!
-                : '',
+        equipamento: _equipamentoController.text,
       );
-      // Implement save logic here (e.g., save to SQLite in the future)
-      print(
-          'Exercício salvo: ${exercicio.nome}, Equipamento: ${exercicio.equipamento}');
-      Navigator.pop(context);
+
+      try {
+        await _dao.salvar(exercicio);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(widget.exercicio == null
+                  ? 'Exercício cadastrado com sucesso!'
+                  : 'Exercício atualizado com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao salvar exercício: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -53,9 +74,11 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.amber,
-        title: const Text(
-          'Cadastro de Exercícios',
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          widget.exercicio == null
+              ? 'Cadastro de Exercícios'
+              : 'Editar Exercício',
+          style: const TextStyle(color: Colors.black),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -83,17 +106,19 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
                 style: const TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o nome do exercício';
+                    return 'O nome do exercício é obrigatório';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: _selectedEquipment,
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _equipamentoController,
                 decoration: const InputDecoration(
                   labelText: 'Equipamento',
+                  hintText: 'Insira o equipamento utilizado',
                   labelStyle: TextStyle(color: Colors.amber),
+                  hintStyle: TextStyle(color: Colors.amber),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.amber),
                   ),
@@ -101,24 +126,10 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
                     borderSide: BorderSide(color: Colors.amber),
                   ),
                 ),
-                dropdownColor: Colors.black,
-                items: mockEquipments.map((equipment) {
-                  return DropdownMenuItem(
-                    value: equipment,
-                    child: Text(
-                      equipment,
-                      style: const TextStyle(color: Colors.amber),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedEquipment = value;
-                  });
-                },
+                style: const TextStyle(color: Colors.white),
                 validator: (value) {
-                  if (value == null) {
-                    return 'Por favor, selecione um equipamento';
+                  if (value == null || value.isEmpty) {
+                    return 'O equipamento é obrigatório';
                   }
                   return null;
                 },
@@ -129,8 +140,8 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
                   backgroundColor: Colors.amber,
                   foregroundColor: Colors.black,
                 ),
-                onPressed: _saveExercise,
-                child: const Text('Salvar'),
+                onPressed: _salvar,
+                child: Text(widget.exercicio == null ? 'Salvar' : 'Atualizar'),
               ),
             ],
           ),

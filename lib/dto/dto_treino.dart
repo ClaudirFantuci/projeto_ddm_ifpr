@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class DTOTreino {
   String? id;
   String nome;

@@ -9,6 +9,8 @@ class Rotas {
   static const listaAcademias = '/lista_academias';
   static const listaEquipamentos = '/listaEquipamentos';
   static const listaAlunos = '/lista_alunos';
+  static const listaObjetivos = '/lista_objetivos';
+  static const listaExercicios = '/lista_exercicios';
   static const agendamento = '/agendamento';
   static const detalhesAgendamento = '/detalhes_agendamento';
 }
