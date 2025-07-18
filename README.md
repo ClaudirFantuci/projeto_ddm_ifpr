@@ -37,7 +37,7 @@ O projeto visa facilitar a rotina de personal trainers, permitindo:
 - 
 ## Pré-requisitos
 
-- **Flutter SDK**: Versão 3.0.0 ou superior.
+- **Flutter SDK**: Versão 3.32.0.
 - **Dart**: Incluído com o Flutter.
 - **Dispositivo/Emulador**: Android ou iOS para testes.
 - **IDE**: Recomenda-se Visual Studio Code ou Android Studio.
