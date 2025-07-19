@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_equipamentos.dart';
-import 'package:projeto_ddm_ifpr/widget/widget_lista_equipamentos.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_equipamentos.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_agendamento.dart';
-import 'package:projeto_ddm_ifpr/widget/widget_lista_academias.dart'
+import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_academias.dart'
     hide Scaffold;
-import 'package:projeto_ddm_ifpr/widget/widget_lista_alunos.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_alunos.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_menu.dart';
 import 'package:projeto_ddm_ifpr/configuracao/rotas.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_academias.dart';

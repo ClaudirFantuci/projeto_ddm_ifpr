@@ -28,7 +28,10 @@ class ScriptSQLite {
     CREATE TABLE exercicio (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nome TEXT NOT NULL,
-      equipamento TEXT NOT NULL
+      equipamento_id INTEGER NOT NULL,
+      equipamento_secundario_id INTEGER,
+      FOREIGN KEY (equipamento_id) REFERENCES equipamento(id),
+      FOREIGN KEY (equipamento_secundario_id) REFERENCES equipamento(id)
     )
   ''';
 
@@ -65,11 +68,11 @@ class ScriptSQLite {
   ];
 
   static const List<String> _insercoesExercicio = [
-    "INSERT INTO exercicio (nome, equipamento) VALUES ('Supino reto', 'Banco de supino')",
-    "INSERT INTO exercicio (nome, equipamento) VALUES ('Agachamento livre', 'Barra olímpica')",
-    "INSERT INTO exercicio (nome, equipamento) VALUES ('Flexão de braço', 'Nenhum')",
-    "INSERT INTO exercicio (nome, equipamento) VALUES ('Puxada alta', 'Máquina de puxada')",
-    "INSERT INTO exercicio (nome, equipamento) VALUES ('Abdominal crunch', 'Máquina de abdominal')",
+    "INSERT INTO exercicio (nome, equipamento_id, equipamento_secundario_id) VALUES ('Supino Reto', 5, 1)",
+    "INSERT INTO exercicio (nome, equipamento_id, equipamento_secundario_id) VALUES ('Agachamento Livre', 2, NULL)",
+    "INSERT INTO exercicio (nome, equipamento_id, equipamento_secundario_id) VALUES ('Rosca Direta', 1, 6)",
+    "INSERT INTO exercicio (nome, equipamento_id, equipamento_secundario_id) VALUES ('Leg Press 45°', 7, NULL)",
+    "INSERT INTO exercicio (nome, equipamento_id, equipamento_secundario_id) VALUES ('Puxada na Polia', 4, 1)",
   ];
 
   static const List<List<String>> comandosInsercoes = [

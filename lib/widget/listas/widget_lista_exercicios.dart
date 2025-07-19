@@ -114,7 +114,7 @@ class _WidgetListaExerciciosState extends State<WidgetListaExercicios> {
       ),
       body: FutureBuilder<List<DTOExercicio>>(
         key: _futureBuilderKey,
-        future: _dao.consultarTodos(),
+        future: _dao.consultarTodosComNomeEquipamento(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -144,9 +144,32 @@ class _WidgetListaExerciciosState extends State<WidgetListaExercicios> {
                     exercicio.nome,
                     style: const TextStyle(color: Colors.amber),
                   ),
-                  subtitle: Text(
-                    'Equipamento: ${exercicio.equipamento}',
-                    style: const TextStyle(color: Colors.white),
+                  subtitle: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontStyle: FontStyle.normal,
+                      ),
+                      children: [
+                        TextSpan(
+                          text:
+                              'Equipamento I: ${exercicio.equipamentoNome ?? "Desconhecido"}',
+                        ),
+                        if (exercicio.equipamentoSecundarioNome != null) ...[
+                          TextSpan(
+                            text: ' ou ',
+                            style: const TextStyle(
+                              fontStyle: FontStyle.italic,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          TextSpan(
+                            text:
+                                'Equipamento II: ${exercicio.equipamentoSecundarioNome}',
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

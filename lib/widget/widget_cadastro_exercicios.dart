@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_ddm_ifpr/banco/sqlite/dao/dao_exercicio.dart';
+import 'package:projeto_ddm_ifpr/banco/sqlite/dao/dao_equipamento.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_exercicio.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_equipamento.dart';
 
 class WidgetCadastroExercicios extends StatefulWidget {
   final DTOExercicio? exercicio;
@@ -15,22 +17,43 @@ class WidgetCadastroExercicios extends StatefulWidget {
 class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
-  final _equipamentoController = TextEditingController();
-  final _dao = DAOExercicio();
+  final _daoExercicio = DAOExercicio();
+  final _daoEquipamento = DAOEquipamento();
+  List<DTOEquipamento> _equipamentos = [];
+  String? _selectedEquipamentoId;
+  String? _selectedEquipamentoSecundarioId;
 
   @override
   void initState() {
     super.initState();
+    _carregarEquipamentos();
     if (widget.exercicio != null) {
       _nomeController.text = widget.exercicio!.nome;
-      _equipamentoController.text = widget.exercicio!.equipamento;
+      _selectedEquipamentoId = widget.exercicio!.equipamentoId;
+      _selectedEquipamentoSecundarioId =
+          widget.exercicio!.equipamentoSecundarioId;
+    }
+  }
+
+  Future<void> _carregarEquipamentos() async {
+    try {
+      _equipamentos = await _daoEquipamento.consultarTodos();
+      setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar equipamentos: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   void dispose() {
     _nomeController.dispose();
-    _equipamentoController.dispose();
     super.dispose();
   }
 
@@ -39,11 +62,12 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
       final exercicio = DTOExercicio(
         id: widget.exercicio?.id,
         nome: _nomeController.text,
-        equipamento: _equipamentoController.text,
+        equipamentoId: _selectedEquipamentoId!,
+        equipamentoSecundarioId: _selectedEquipamentoSecundarioId,
       );
 
       try {
-        await _dao.salvar(exercicio);
+        await _daoExercicio.salvar(exercicio);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -112,13 +136,51 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _equipamentoController,
+              if (_equipamentos.isEmpty)
+                const Text(
+                  'Carregando equipamentos...',
+                  style: TextStyle(color: Colors.white),
+                )
+              else
+                DropdownButtonFormField<String>(
+                  value: _selectedEquipamentoId,
+                  decoration: const InputDecoration(
+                    labelText: 'Equipamento I',
+                    labelStyle: TextStyle(color: Colors.amber),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.amber),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.amber),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: Colors.black,
+                  items: _equipamentos.map((equipamento) {
+                    return DropdownMenuItem<String>(
+                      value: equipamento.id,
+                      child: Text(equipamento.nome,
+                          style: const TextStyle(color: Colors.white)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedEquipamentoId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Selecione o Equipamento I';
+                    }
+                    return null;
+                  },
+                ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedEquipamentoSecundarioId,
                 decoration: const InputDecoration(
-                  labelText: 'Equipamento',
-                  hintText: 'Insira o equipamento utilizado',
+                  labelText: 'Equipamento II (opcional)',
                   labelStyle: TextStyle(color: Colors.amber),
-                  hintStyle: TextStyle(color: Colors.amber),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.amber),
                   ),
@@ -127,11 +189,25 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
                   ),
                 ),
                 style: const TextStyle(color: Colors.white),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'O equipamento é obrigatório';
-                  }
-                  return null;
+                dropdownColor: Colors.black,
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child:
+                        Text('Nenhum', style: TextStyle(color: Colors.white)),
+                  ),
+                  ..._equipamentos.map((equipamento) {
+                    return DropdownMenuItem<String>(
+                      value: equipamento.id,
+                      child: Text(equipamento.nome,
+                          style: const TextStyle(color: Colors.white)),
+                    );
+                  }),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedEquipamentoSecundarioId = value;
+                  });
                 },
               ),
               const SizedBox(height: 20),
