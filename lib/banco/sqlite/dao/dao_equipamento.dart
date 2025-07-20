@@ -3,27 +3,27 @@ import 'package:projeto_ddm_ifpr/banco/sqlite/conexao.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_equipamento.dart';
 
 class DAOEquipamento {
-  final String _tabela = 'equipamento';
-  final String _sqlInserir = '''
-    INSERT INTO equipamento (nome) VALUES (?)
+  final String _sqlSalvarEquipamento = '''
+    INSERT OR REPLACE INTO equipamento (id, nome)
+    VALUES (?, ?)
   ''';
-  final String _sqlAlterar = '''
-    UPDATE equipamento SET nome = ? WHERE id = ?
-  ''';
+
   final String _sqlConsultarTodos = '''
     SELECT id, nome FROM equipamento
   ''';
+
   final String _sqlConsultarPorId = '''
     SELECT id, nome FROM equipamento WHERE id = ?
   ''';
-  final String _sqlExcluir = '''
+
+  final String _sqlExcluirEquipamento = '''
     DELETE FROM equipamento WHERE id = ?
   ''';
 
-  Map<String, dynamic> toMap(DTOEquipamento equipamento) {
+  Map<String, dynamic> toMap(DTOEquipamento dto) {
     return {
-      'id': equipamento.id,
-      'nome': equipamento.nome,
+      'id': dto.id != null ? int.tryParse(dto.id!) : null,
+      'nome': dto.nome,
     };
   }
 
@@ -34,42 +34,49 @@ class DAOEquipamento {
     );
   }
 
-  Future<int> salvar(DTOEquipamento equipamento) async {
-    final Database db = await ConexaoSQLite.database;
-    if (equipamento.id == null) {
-      // Inserir novo equipamento
-      return await db.rawInsert(
-        _sqlInserir,
-        [equipamento.nome],
+  Future<void> salvar(DTOEquipamento dto) async {
+    final db = await ConexaoSQLite.database;
+    try {
+      await db.rawInsert(
+        _sqlSalvarEquipamento,
+        [dto.id != null ? int.tryParse(dto.id!) : null, dto.nome],
       );
-    } else {
-      // Alterar equipamento existente
-      return await db.rawUpdate(
-        _sqlAlterar,
-        [equipamento.nome, equipamento.id],
-      );
+    } catch (e) {
+      throw Exception('Erro ao salvar equipamento: $e');
     }
   }
 
   Future<List<DTOEquipamento>> consultarTodos() async {
-    final Database db = await ConexaoSQLite.database;
-    final List<Map<String, dynamic>> maps =
-        await db.rawQuery(_sqlConsultarTodos);
-    return maps.map((map) => fromMap(map)).toList();
+    final db = await ConexaoSQLite.database;
+    try {
+      final List<Map<String, dynamic>> maps =
+          await db.rawQuery(_sqlConsultarTodos);
+      return maps.map((map) => fromMap(map)).toList();
+    } catch (e) {
+      throw Exception('Erro ao consultar equipamentos: $e');
+    }
   }
 
   Future<DTOEquipamento?> consultarPorId(int id) async {
-    final Database db = await ConexaoSQLite.database;
-    final List<Map<String, dynamic>> maps = await db.rawQuery(
-      _sqlConsultarPorId,
-      [id],
-    );
-    if (maps.isEmpty) return null;
-    return fromMap(maps.first);
+    final db = await ConexaoSQLite.database;
+    try {
+      final List<Map<String, dynamic>> maps =
+          await db.rawQuery(_sqlConsultarPorId, [id]);
+      if (maps.isNotEmpty) {
+        return fromMap(maps.first);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Erro ao consultar equipamento por ID: $e');
+    }
   }
 
-  Future<int> excluir(int id) async {
-    final Database db = await ConexaoSQLite.database;
-    return await db.rawDelete(_sqlExcluir, [id]);
+  Future<void> excluir(int id) async {
+    final db = await ConexaoSQLite.database;
+    try {
+      await db.rawDelete(_sqlExcluirEquipamento, [id]);
+    } catch (e) {
+      throw Exception('Erro ao excluir equipamento: $e');
+    }
   }
 }

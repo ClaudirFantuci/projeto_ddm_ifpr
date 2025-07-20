@@ -20,8 +20,7 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
   final _daoExercicio = DAOExercicio();
   final _daoEquipamento = DAOEquipamento();
   List<DTOEquipamento> _equipamentos = [];
-  String? _selectedEquipamentoId;
-  String? _selectedEquipamentoSecundarioId;
+  List<String> _selectedEquipamentoIds = [];
 
   @override
   void initState() {
@@ -29,9 +28,7 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
     _carregarEquipamentos();
     if (widget.exercicio != null) {
       _nomeController.text = widget.exercicio!.nome;
-      _selectedEquipamentoId = widget.exercicio!.equipamentoId;
-      _selectedEquipamentoSecundarioId =
-          widget.exercicio!.equipamentoSecundarioId;
+      _selectedEquipamentoIds = widget.exercicio!.equipamentosIds;
     }
   }
 
@@ -62,8 +59,7 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
       final exercicio = DTOExercicio(
         id: widget.exercicio?.id,
         nome: _nomeController.text,
-        equipamentoId: _selectedEquipamentoId!,
-        equipamentoSecundarioId: _selectedEquipamentoSecundarioId,
+        equipamentosIds: _selectedEquipamentoIds,
       );
 
       try {
@@ -136,80 +132,45 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
                 },
               ),
               const SizedBox(height: 16),
+              const Text(
+                'Equipamentos',
+                style: TextStyle(color: Colors.amber, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
               if (_equipamentos.isEmpty)
                 const Text(
                   'Carregando equipamentos...',
                   style: TextStyle(color: Colors.white),
                 )
               else
-                DropdownButtonFormField<String>(
-                  value: _selectedEquipamentoId,
-                  decoration: const InputDecoration(
-                    labelText: 'Equipamento I',
-                    labelStyle: TextStyle(color: Colors.amber),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  dropdownColor: Colors.black,
-                  items: _equipamentos.map((equipamento) {
-                    return DropdownMenuItem<String>(
-                      value: equipamento.id,
-                      child: Text(equipamento.nome,
-                          style: const TextStyle(color: Colors.white)),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedEquipamentoId = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Selecione o Equipamento I';
-                    }
-                    return null;
-                  },
-                ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedEquipamentoSecundarioId,
-                decoration: const InputDecoration(
-                  labelText: 'Equipamento II (opcional)',
-                  labelStyle: TextStyle(color: Colors.amber),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _equipamentos.length,
+                    itemBuilder: (context, index) {
+                      final equipamento = _equipamentos[index];
+                      final isSelected =
+                          _selectedEquipamentoIds.contains(equipamento.id);
+                      return CheckboxListTile(
+                        title: Text(
+                          equipamento.nome,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        value: isSelected,
+                        activeColor: Colors.amber,
+                        checkColor: Colors.black,
+                        onChanged: (value) {
+                          setState(() {
+                            if (value == true) {
+                              _selectedEquipamentoIds.add(equipamento.id!);
+                            } else {
+                              _selectedEquipamentoIds.remove(equipamento.id);
+                            }
+                          });
+                        },
+                      );
+                    },
                   ),
                 ),
-                style: const TextStyle(color: Colors.white),
-                dropdownColor: Colors.black,
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child:
-                        Text('Nenhum', style: TextStyle(color: Colors.white)),
-                  ),
-                  ..._equipamentos.map((equipamento) {
-                    return DropdownMenuItem<String>(
-                      value: equipamento.id,
-                      child: Text(equipamento.nome,
-                          style: const TextStyle(color: Colors.white)),
-                    );
-                  }),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedEquipamentoSecundarioId = value;
-                  });
-                },
-              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

@@ -81,9 +81,8 @@ class _ListaEquipamentosState extends State<ListaEquipamentos> {
     if (confirm != true) return;
 
     try {
-      final result = await _dao.excluir(int.parse(equipamento.id!));
-      print(
-          'Excluir equipamento: ${equipamento.nome}, ID: ${equipamento.id}, Resultado: $result');
+      await _dao.excluir(int.parse(equipamento.id!));
+      print('Excluir equipamento: ${equipamento.nome}, ID: ${equipamento.id}');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

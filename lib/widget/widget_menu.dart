@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
-import '/configuracao/rotas.dart';
-import '/configuracao/aplicativo.dart';
+import 'package:projeto_ddm_ifpr/configuracao/rotas.dart';
 
 class WidgetMenu extends StatelessWidget {
   const WidgetMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Widget criarMenu({required String rotulo, required String rota}) {
-      return ListTile(
-        title: Text(rotulo, style: const TextStyle(color: Colors.amber)),
-        onTap: () => Navigator.pushNamed(context, rota),
-      );
-    }
-
     List<String> horarios = ["08:00", "10:00", "15:00", "18:00"];
 
     return Scaffold(
@@ -24,7 +16,7 @@ class WidgetMenu extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       drawer: Drawer(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color.fromARGB(255, 36, 36, 36),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -39,53 +31,17 @@ class WidgetMenu extends StatelessWidget {
                 ),
               ),
             ),
-            criarMenu(
-              rotulo: 'Cadastro de Academias',
-              rota: Rotas.cadastroAcademias,
+            ListTile(
+              leading: const Icon(Icons.list, color: Colors.amber),
+              title:
+                  const Text('Listas', style: TextStyle(color: Colors.amber)),
+              onTap: () => Navigator.pushNamed(context, Rotas.listas),
             ),
-            criarMenu(
-              rotulo: 'Cadastro de Alunos',
-              rota: Rotas.cadastroAlunos,
-            ),
-            criarMenu(
-              rotulo: 'Cadastro de Objetivos',
-              rota: Rotas.cadastroObjetivos,
-            ),
-            criarMenu(
-              rotulo: 'Cadastro de Equipamentos',
-              rota: Rotas.cadastroEquipamento,
-            ),
-            criarMenu(
-              rotulo: 'Cadastro de Exercícios',
-              rota: Rotas.cadastroExercicios,
-            ),
-            criarMenu(
-              rotulo: 'Cadastro de Treinos',
-              rota: Rotas.cadastroTreinos,
-            ),
-            criarMenu(
-              rotulo: 'Lista de Academias',
-              rota: Rotas.listaAcademias,
-            ),
-            criarMenu(
-              rotulo: 'Lista de Equipamentos',
-              rota: Rotas.listaEquipamentos,
-            ),
-            criarMenu(
-              rotulo: 'Lista de Alunos',
-              rota: Rotas.listaAlunos,
-            ),
-            criarMenu(
-              rotulo: 'Lista de Objetivos',
-              rota: Rotas.listaObjetivos,
-            ),
-            criarMenu(
-              rotulo: 'Lista de Exercícios',
-              rota: Rotas.listaExercicios,
-            ),
-            criarMenu(
-              rotulo: 'Novo Agendamento',
-              rota: Rotas.agendamento,
+            ListTile(
+              leading: const Icon(Icons.add_circle, color: Colors.amber),
+              title: const Text('Cadastros',
+                  style: TextStyle(color: Colors.amber)),
+              onTap: () => Navigator.pushNamed(context, Rotas.cadastros),
             ),
           ],
         ),

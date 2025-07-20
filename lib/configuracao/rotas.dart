@@ -11,6 +11,9 @@ class Rotas {
   static const listaAlunos = '/lista_alunos';
   static const listaObjetivos = '/lista_objetivos';
   static const listaExercicios = '/lista_exercicios';
+  static const listaTreinos = '/lista_treinos';
   static const agendamento = '/agendamento';
   static const detalhesAgendamento = '/detalhes_agendamento';
+  static const listas = '/listas';
+  static const cadastros = '/cadastros';
 }

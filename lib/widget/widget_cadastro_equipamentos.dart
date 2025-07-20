@@ -41,9 +41,8 @@ class _WidgetCadastroEquipamentosState
       );
 
       try {
-        final result = await _dao.salvar(equipamento);
-        print(
-            'Salvar equipamento: ${equipamento.nome}, ID: ${equipamento.id}, Resultado: $result');
+        await _dao.salvar(equipamento);
+        print('Salvar equipamento: ${equipamento.nome}, ID: ${equipamento.id}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

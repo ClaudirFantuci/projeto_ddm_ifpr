@@ -1,17 +1,13 @@
 class DTOExercicio {
   String? id;
   String nome;
-  String equipamentoId;
-  String? equipamentoNome;
-  String? equipamentoSecundarioId;
-  String? equipamentoSecundarioNome;
+  List<String> equipamentosIds;
+  List<String>? equipamentosNomes;
 
   DTOExercicio({
     this.id,
     required this.nome,
-    required this.equipamentoId,
-    this.equipamentoNome,
-    this.equipamentoSecundarioId,
-    this.equipamentoSecundarioNome,
+    required this.equipamentosIds,
+    this.equipamentosNomes,
   });
 }

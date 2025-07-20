@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_ddm_ifpr/banco/sqlite/dao/dao_aluno.dart';
+import 'package:projeto_ddm_ifpr/banco/sqlite/dao/dao_treino.dart';
 import 'package:projeto_ddm_ifpr/configuracao/rotas.dart';
-import 'package:projeto_ddm_ifpr/dto/dto_aluno.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_treino.dart';
 
-class WidgetListaAlunos extends StatefulWidget {
-  const WidgetListaAlunos({super.key});
+class WidgetListaTreinos extends StatefulWidget {
+  const WidgetListaTreinos({super.key});
 
   @override
-  State<WidgetListaAlunos> createState() => _WidgetListaAlunosState();
+  State<WidgetListaTreinos> createState() => _WidgetListaTreinosState();
 }
 
-class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
-  final _dao = DAOAluno();
+class _WidgetListaTreinosState extends State<WidgetListaTreinos> {
+  final _dao = DAOTreino();
   Key _futureBuilderKey = UniqueKey();
 
   void _refreshList() {
@@ -20,17 +20,17 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
     });
   }
 
-  void _alterarAluno(BuildContext context, AlunoDTO aluno) async {
+  void _alterarTreino(BuildContext context, DTOTreino treino) async {
     try {
       await Navigator.pushNamed(
         context,
-        Rotas.cadastroAlunos,
-        arguments: aluno,
+        Rotas.cadastroTreinos,
+        arguments: treino,
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Aluno ${aluno.nome} pronto para edição'),
+            content: Text('Treino ${treino.nome} pronto para edição'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -48,7 +48,7 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
     }
   }
 
-  void _excluirAluno(BuildContext context, AlunoDTO aluno) async {
+  void _excluirTreino(BuildContext context, DTOTreino treino) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -58,7 +58,7 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
           style: TextStyle(color: Colors.amber),
         ),
         content: Text(
-          'Deseja realmente excluir o aluno ${aluno.nome}?',
+          'Deseja realmente excluir o treino ${treino.nome}?',
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
@@ -78,11 +78,11 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
     if (confirm != true) return;
 
     try {
-      await _dao.excluir(int.parse(aluno.id!));
+      await _dao.excluir(int.parse(treino.id!));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Aluno ${aluno.nome} excluído com sucesso'),
+            content: Text('Treino ${treino.nome} excluído com sucesso'),
             backgroundColor: Colors.red,
           ),
         );
@@ -92,7 +92,7 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao excluir aluno: $e'),
+            content: Text('Erro ao excluir treino: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -107,43 +107,33 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
       appBar: AppBar(
         backgroundColor: Colors.amber,
         title: const Text(
-          'Lista de Alunos',
+          'Lista de Treinos',
           style: TextStyle(color: Colors.black),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: FutureBuilder<List<AlunoDTO>>(
+      body: FutureBuilder<List<DTOTreino>>(
         key: _futureBuilderKey,
         future: _dao.consultarTodos(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.amber),
-            );
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            print('Erro no FutureBuilder: ${snapshot.error}');
-            return Center(
-              child: Text(
-                'Erro ao carregar alunos: ${snapshot.error}',
-                style: const TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
-              ),
-            );
+            return const Center(
+                child: Text('Erro ao carregar treinos',
+                    style: TextStyle(color: Colors.white)));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-              child: Text(
-                'Nenhum aluno encontrado',
-                style: TextStyle(color: Colors.white),
-              ),
-            );
+                child: Text('Nenhum treino encontrado',
+                    style: TextStyle(color: Colors.white)));
           }
 
-          final alunos = snapshot.data!;
+          final treinos = snapshot.data!;
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: alunos.length,
+            itemCount: treinos.length,
             itemBuilder: (context, index) {
-              final aluno = alunos[index];
+              final treino = treinos[index];
               return Card(
                 color: const Color.fromARGB(255, 36, 36, 36),
                 shape: RoundedRectangleBorder(
@@ -151,36 +141,23 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
                 ),
                 child: ListTile(
                   title: Text(
-                    aluno.nome,
+                    treino.nome,
                     style: const TextStyle(color: Colors.amber),
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Objetivo Principal: ${aluno.objetivoPrincipalNome ?? "Nenhum"}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      Text(
-                        'Objetivos Adicionais: ${aluno.objetivosAdicionaisNomes?.join(", ") ?? "Nenhum"}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      Text(
-                        'Telefone: ${aluno.telefone}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ],
+                  subtitle: Text(
+                    'Exercícios: ${treino.exerciciosNomes?.join(", ") ?? "Nenhum"}',
+                    style: const TextStyle(color: Colors.white),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.orange),
-                        onPressed: () => _alterarAluno(context, aluno),
+                        onPressed: () => _alterarTreino(context, treino),
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _excluirAluno(context, aluno),
+                        onPressed: () => _excluirTreino(context, treino),
                       ),
                     ],
                   ),
@@ -193,7 +170,7 @@ class _WidgetListaAlunosState extends State<WidgetListaAlunos> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.amber,
         foregroundColor: Colors.black,
-        onPressed: () => Navigator.pushNamed(context, Rotas.cadastroAlunos)
+        onPressed: () => Navigator.pushNamed(context, Rotas.cadastroTreinos)
             .then((_) => _refreshList()),
         child: const Icon(Icons.add),
       ),

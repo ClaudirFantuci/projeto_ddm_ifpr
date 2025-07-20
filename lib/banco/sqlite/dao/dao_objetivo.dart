@@ -9,39 +9,40 @@ class DAOObjetivo {
   ''';
 
   final String _sqlConsultarTodos = '''
-    SELECT * FROM objetivo
+    SELECT id, nome FROM objetivo
   ''';
 
   final String _sqlConsultarPorId = '''
-    SELECT * FROM objetivo WHERE id = ?
+    SELECT id, nome FROM objetivo WHERE id = ?
   ''';
 
   final String _sqlExcluir = '''
     DELETE FROM objetivo WHERE id = ?
   ''';
 
-  Future<DTOObjetivo> _fromMap(Map<String, dynamic> map) async {
-    return DTOObjetivo(
-      id: map['id']?.toString(),
-      nome: map['nome'] as String,
-    );
-  }
-
-  Map<String, dynamic> _toMap(DTOObjetivo dto) {
+  Map<String, dynamic> toMap(DTOObjetivo dto) {
     return {
       'id': dto.id != null ? int.tryParse(dto.id!) : null,
       'nome': dto.nome,
     };
   }
 
+  DTOObjetivo fromMap(Map<String, dynamic> map) {
+    return DTOObjetivo(
+      id: map['id']?.toString(),
+      nome: map['nome'] as String,
+    );
+  }
+
   Future<void> salvar(DTOObjetivo dto) async {
     final db = await ConexaoSQLite.database;
     try {
-      await db.rawInsert(_sqlSalvar, [
-        dto.id != null ? int.tryParse(dto.id!) : null,
-        dto.nome,
-      ]);
+      await db.rawInsert(
+        _sqlSalvar,
+        [dto.id != null ? int.tryParse(dto.id!) : null, dto.nome],
+      );
     } catch (e) {
+      print('Erro ao salvar objetivo: $e');
       throw Exception('Erro ao salvar objetivo: $e');
     }
   }
@@ -51,8 +52,9 @@ class DAOObjetivo {
     try {
       final List<Map<String, dynamic>> maps =
           await db.rawQuery(_sqlConsultarTodos);
-      return Future.wait(maps.map((map) => _fromMap(map)).toList());
+      return maps.map((map) => fromMap(map)).toList();
     } catch (e) {
+      print('Erro ao consultar objetivos: $e');
       throw Exception('Erro ao consultar objetivos: $e');
     }
   }
@@ -63,10 +65,11 @@ class DAOObjetivo {
       final List<Map<String, dynamic>> maps =
           await db.rawQuery(_sqlConsultarPorId, [id]);
       if (maps.isNotEmpty) {
-        return await _fromMap(maps.first);
+        return fromMap(maps.first);
       }
       return null;
     } catch (e) {
+      print('Erro ao consultar objetivo por ID $id: $e');
       throw Exception('Erro ao consultar objetivo por ID: $e');
     }
   }
@@ -76,6 +79,7 @@ class DAOObjetivo {
     try {
       await db.rawDelete(_sqlExcluir, [id]);
     } catch (e) {
+      print('Erro ao excluir objetivo $id: $e');
       throw Exception('Erro ao excluir objetivo: $e');
     }
   }
