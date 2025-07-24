@@ -133,7 +133,7 @@ class _WidgetCadastroExerciciosState extends State<WidgetCadastroExercicios> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Equipamentos',
+                'Este exercício pode ser executado com:',
                 style: TextStyle(color: Colors.amber, fontSize: 16),
               ),
               const SizedBox(height: 8),
