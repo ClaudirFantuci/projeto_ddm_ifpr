@@ -3,8 +3,6 @@
 
 O projeto é um aplicativo móvel desenvolvido como projeto da disciplina de Desenvolvimento para Dispositivos Móveis no IFPR Campus Paranavaí. O objetivo do aplicativo é auxiliar personal trainers no gerenciamento de seus alunos e aulas ao longo da semana, proporcionando uma ferramenta prática para organizar academias, equipamentos, exercícios, treinos e agendamentos.
 
-O aplicativo foi construído utilizando **Flutter** e **sqflite** para gerenciamento de banco de dados local, oferecendo uma interface amigável e funcionalidades essenciais para o controle eficiente das atividades de treinamento.
-
 ## Objetivo
 
 O projeto visa facilitar a rotina de personal trainers, permitindo:
@@ -32,9 +30,7 @@ O projeto visa facilitar a rotina de personal trainers, permitindo:
 
 - **Flutter**: Framework para desenvolvimento da interface do aplicativo.
 - **sqflite**: Banco de dados SQLite para armazenamento local de dados.
-- **Dart**: Linguagem de programação para lógica do aplicativo.
-- **Material Design**: Componentes visuais para uma interface amigável.
-- 
+
 ## Pré-requisitos
 
 - **Flutter SDK**: Versão 3.32.0.
