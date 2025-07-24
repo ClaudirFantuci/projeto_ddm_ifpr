@@ -36,7 +36,13 @@ class _WidgetCadastroAlunosState extends State<WidgetCadastroAlunos> {
     _carregarObjetivos();
     if (widget.aluno != null) {
       _nomeController.text = widget.aluno!.nome;
-      _telefoneController.text = widget.aluno!.telefone;
+      // Apply mask to pre-filled phone number
+      _telefoneController.text = _telefoneMask
+          .formatEditUpdate(
+            TextEditingValue.empty,
+            TextEditingValue(text: widget.aluno!.telefone),
+          )
+          .text;
       _selectedObjetivoPrincipalId = widget.aluno!.objetivoPrincipalId;
       _selectedObjetivosAdicionaisIds = widget.aluno!.objetivosAdicionaisIds;
     }
@@ -164,10 +170,13 @@ class _WidgetCadastroAlunosState extends State<WidgetCadastroAlunos> {
                 ),
                 style: const TextStyle(color: Colors.white),
                 validator: (value) {
-                  if (value == null ||
-                      value.isEmpty ||
-                      !_telefoneMask.isFill()) {
-                    return 'O telefone é obrigatório e deve estar no formato (XX) XXXXX-XXXX';
+                  if (value == null || value.isEmpty) {
+                    return 'O telefone é obrigatório';
+                  }
+                  // Validate phone number format using regex
+                  final regex = RegExp(r'^\(\d{2}\) \d{5}-\d{4}$');
+                  if (!regex.hasMatch(value)) {
+                    return 'O telefone deve estar no formato (XX) XXXXX-XXXX';
                   }
                   return null;
                 },
@@ -197,50 +206,59 @@ class _WidgetCadastroAlunosState extends State<WidgetCadastroAlunos> {
                 onChanged: (value) {
                   setState(() {
                     _selectedObjetivoPrincipalId = value;
+                    // Clear additional objectives if primary objective changes
+                    _selectedObjetivosAdicionaisIds.clear();
                   });
                 },
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Objetivos Adicionais',
-                style: TextStyle(color: Colors.amber, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
-              if (_objetivos.isEmpty)
+              if (_selectedObjetivoPrincipalId != null) ...[
                 const Text(
-                  'Carregando objetivos...',
-                  style: TextStyle(color: Colors.white),
-                )
-              else
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _objetivos.length,
-                    itemBuilder: (context, index) {
-                      final objetivo = _objetivos[index];
-                      final isSelected =
-                          _selectedObjetivosAdicionaisIds.contains(objetivo.id);
-                      return CheckboxListTile(
-                        title: Text(
-                          objetivo.nome,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        value: isSelected,
-                        activeColor: Colors.amber,
-                        checkColor: Colors.black,
-                        onChanged: (value) {
-                          setState(() {
-                            if (value == true) {
-                              _selectedObjetivosAdicionaisIds.add(objetivo.id!);
-                            } else {
-                              _selectedObjetivosAdicionaisIds
-                                  .remove(objetivo.id);
-                            }
-                          });
-                        },
-                      );
-                    },
-                  ),
+                  'Objetivos Adicionais',
+                  style: TextStyle(color: Colors.amber, fontSize: 16),
                 ),
+                const SizedBox(height: 8),
+                if (_objetivos.isEmpty)
+                  const Text(
+                    'Carregando objetivos...',
+                    style: TextStyle(color: Colors.white),
+                  )
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _objetivos.length,
+                      itemBuilder: (context, index) {
+                        final objetivo = _objetivos[index];
+                        // Skip the primary objective
+                        if (objetivo.id == _selectedObjetivoPrincipalId) {
+                          return const SizedBox.shrink();
+                        }
+                        final isSelected = _selectedObjetivosAdicionaisIds
+                            .contains(objetivo.id);
+                        return CheckboxListTile(
+                          title: Text(
+                            objetivo.nome,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          value: isSelected,
+                          activeColor: Colors.amber,
+                          checkColor: Colors.black,
+                          onChanged: (value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedObjetivosAdicionaisIds
+                                    .add(objetivo.id!);
+                              } else {
+                                _selectedObjetivosAdicionaisIds
+                                    .remove(objetivo.id);
+                              }
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

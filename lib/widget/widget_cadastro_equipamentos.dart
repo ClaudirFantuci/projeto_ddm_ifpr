@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_ddm_ifpr/banco/sqlite/dao/dao_equipamento.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_equipamento.dart';
-import 'package:projeto_ddm_ifpr/configuracao/rotas.dart';
 
 class WidgetCadastroEquipamentos extends StatefulWidget {
   final DTOEquipamento? equipamento;

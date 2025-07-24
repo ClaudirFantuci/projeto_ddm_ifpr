@@ -106,15 +106,15 @@ class WidgetMenu extends StatelessWidget {
                         color: Colors.amber,
                       ),
                       onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          Rotas.detalhesAgendamento,
-                          arguments: {
-                            'aluno': 'Aluno ${index + 1}',
-                            'academia': 'Academia ${index + 1}',
-                            'horario': horario,
-                          },
-                        );
+                        // Navigator.pushNamed(
+                        //   context,
+                        //   Rotas.detalhesAgendamento,
+                        //   arguments: {
+                        //     'aluno': 'Aluno ${index + 1}',
+                        //     'academia': 'Academia ${index + 1}',
+                        //     'horario': horario,
+                        //   },
+                        // );
                       },
                     ),
                   );
