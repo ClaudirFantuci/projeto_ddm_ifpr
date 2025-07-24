@@ -42,7 +42,8 @@ O projeto visa facilitar a rotina de personal trainers, permitindo:
 - **Dispositivo/Emulador**: Android ou iOS para testes.
 - **IDE**: Recomenda-se Visual Studio Code ou Android Studio.
   
-##Executando o projeto
+## Executando o projeto
+
 ### Clone o projeto
 git clone https://github.com/ClaudirFantuci/projeto_ddm_ifpr.git
 cd projeto_ddm_ifpr
