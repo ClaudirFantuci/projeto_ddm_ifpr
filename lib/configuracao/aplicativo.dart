@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_modalidades.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_equipamentos.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_equipamentos.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_agendamento.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_academias.dart'
     hide Scaffold;
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_alunos.dart';
-import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_academias.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_menu.dart';
 import 'package:projeto_ddm_ifpr/configuracao/rotas.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_academias.dart';
@@ -24,7 +24,8 @@ import 'package:projeto_ddm_ifpr/dto/dto_objetivo.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_exercicio.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_treino.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_aluno.dart';
-// FAZER: import widget_detalhes_agendamento.dart
+import 'package:projeto_ddm_ifpr/widget/widget_cadastro_modalidades.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_modalidade.dart';
 
 class Aplicativo extends StatelessWidget {
   const Aplicativo({super.key});
@@ -64,6 +65,11 @@ class Aplicativo extends StatelessWidget {
             return MaterialPageRoute(
                 builder: (_) =>
                     WidgetCadastroEquipamentos(equipamento: equipamento));
+          case Rotas.cadastroModalidade:
+            final modalidade = settings.arguments as DtoModalidade?;
+            return MaterialPageRoute(
+                builder: (_) =>
+                    WidgetCadastroModalidades(modalidade: modalidade));
           case Rotas.listaAcademias:
             return MaterialPageRoute(
                 builder: (_) => const WidgetListaAcademias());
@@ -80,6 +86,8 @@ class Aplicativo extends StatelessWidget {
           case Rotas.listaTreinos:
             return MaterialPageRoute(
                 builder: (_) => const WidgetListaTreinos());
+          case Rotas.listaModalidades:
+            return MaterialPageRoute(builder: (_) => const ListaModalidade());
           case Rotas.agendamento:
             return MaterialPageRoute(builder: (_) => const WidgetAgendamento());
           case Rotas.listas:

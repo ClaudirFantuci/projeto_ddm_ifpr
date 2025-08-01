@@ -5,17 +5,18 @@ agendamentos
 Objetivos
 Academias
 equipamentos
-professor
+modalidade
 
 
 
-cadastros com associação 1:N (9 pontos):
+cadastros com associação 1:N (12 pontos):
 Alunos(objetivos)
 Treinos(exercicios)
 Exercícios(equipamentos)
+professor(Modalidades)
 
 
 
-cadastros associativos N:N (12 pontos):
+cadastros associativos N:N (6 pontos):
 turmas(alunos/modalidade)
-modalidades_professores (modalidades/professores)
+

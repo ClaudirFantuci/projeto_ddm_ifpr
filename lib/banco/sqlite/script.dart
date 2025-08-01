@@ -83,6 +83,13 @@ class ScriptSQLite {
     )
   ''';
 
+  static const String _criarTabelaModalidade = '''
+    CREATE TABLE modalidade (
+      id TEXT PRIMARY KEY,
+      nome TEXT NOT NULL
+    )
+  ''';
+
   static const List<String> comandosCriarTabelas = [
     _criarTabelaAcademia,
     _criarTabelaEquipamento,
@@ -93,6 +100,7 @@ class ScriptSQLite {
     _criarTabelaTreinoExercicio,
     _criarTabelaAluno,
     _criarTabelaAlunoObjetivo,
+    _criarTabelaModalidade,
   ];
 
   static const List<String> _insercoesAcademia = [
@@ -172,6 +180,14 @@ class ScriptSQLite {
     "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (3, 5)", // Carlos Santos: Reduzir estresse
   ];
 
+  static const List<String> _insercoesModalidade = [
+    "INSERT INTO modalidade (id, nome) VALUES ('1', 'Musculação')",
+    "INSERT INTO modalidade (id, nome) VALUES ('2', 'Yoga')",
+    "INSERT INTO modalidade (id, nome) VALUES ('3', 'Pilates')",
+    "INSERT INTO modalidade (id, nome) VALUES ('4', 'Treinamento Funcional')",
+    "INSERT INTO modalidade (id, nome) VALUES ('5', 'Spinning')",
+  ];
+
   static const List<List<String>> comandosInsercoes = [
     _insercoesAcademia,
     _insercoesEquipamento,
@@ -182,6 +198,7 @@ class ScriptSQLite {
     _insercoesTreinoExercicio,
     _insercoesAluno,
     _insercoesAlunoObjetivo,
+    _insercoesModalidade,
   ];
 
   Future<void> criarTabelas(Database db) async {

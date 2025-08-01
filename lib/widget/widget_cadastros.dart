@@ -62,6 +62,12 @@ class WidgetCadastros extends StatelessWidget {
             ),
             _buildGridButton(
               context,
+              title: 'Cadastrar Modalidade',
+              icon: Icons.sports_gymnastics,
+              route: Rotas.cadastroModalidade,
+            ),
+            _buildGridButton(
+              context,
               title: 'Cadastrar Agendamento',
               icon: Icons.schedule,
               route: Rotas.agendamento,
