@@ -7,9 +7,11 @@ class Rotas {
   static const cadastroTreinos = "/cadastroTreinos";
   static const cadastroEquipamento = '/cadastroEquipamento';
   static const cadastroModalidade = '/cadastroModalidade';
+  static const cadastroProfessores = '/cadastroProfessores';
   static const listaAcademias = '/lista_academias';
   static const listaEquipamentos = '/listaEquipamentos';
   static const listaAlunos = '/lista_alunos';
+  static const listaProfessores = '/lista_Professores';
   static const listaObjetivos = '/lista_objetivos';
   static const listaExercicios = '/lista_exercicios';
   static const listaTreinos = '/lista_treinos';

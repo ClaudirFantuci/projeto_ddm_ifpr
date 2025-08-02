@@ -38,6 +38,12 @@ class WidgetListas extends StatelessWidget {
             ),
             _buildGridButton(
               context,
+              title: 'Professores',
+              icon: Icons.school,
+              route: Rotas.listaProfessores,
+            ),
+            _buildGridButton(
+              context,
               title: 'Objetivos',
               icon: Icons.flag,
               route: Rotas.listaObjetivos,

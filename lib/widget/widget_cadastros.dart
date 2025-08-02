@@ -38,6 +38,12 @@ class WidgetCadastros extends StatelessWidget {
             ),
             _buildGridButton(
               context,
+              title: 'Cadastrar Professor',
+              icon: Icons.school,
+              route: Rotas.cadastroProfessores,
+            ),
+            _buildGridButton(
+              context,
               title: 'Cadastrar Objetivo',
               icon: Icons.flag,
               route: Rotas.cadastroObjetivos,

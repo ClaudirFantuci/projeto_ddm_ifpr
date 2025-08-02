@@ -90,6 +90,24 @@ class ScriptSQLite {
     )
   ''';
 
+  static const String _criarTabelaProfessor = '''
+    CREATE TABLE professor (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      telefone TEXT NOT NULL CHECK(length(telefone) <= 15)
+    )
+  ''';
+
+  static const String _criarTabelaProfessorModalidade = '''
+    CREATE TABLE professor_modalidade (
+      professor_id INTEGER NOT NULL,
+      modalidade_id TEXT NOT NULL,
+      PRIMARY KEY (professor_id, modalidade_id),
+      FOREIGN KEY (professor_id) REFERENCES professor(id),
+      FOREIGN KEY (modalidade_id) REFERENCES modalidade(id)
+    )
+  ''';
+
   static const List<String> comandosCriarTabelas = [
     _criarTabelaAcademia,
     _criarTabelaEquipamento,
@@ -101,6 +119,8 @@ class ScriptSQLite {
     _criarTabelaAluno,
     _criarTabelaAlunoObjetivo,
     _criarTabelaModalidade,
+    _criarTabelaProfessor,
+    _criarTabelaProfessorModalidade,
   ];
 
   static const List<String> _insercoesAcademia = [
@@ -188,6 +208,21 @@ class ScriptSQLite {
     "INSERT INTO modalidade (id, nome) VALUES ('5', 'Spinning')",
   ];
 
+  static const List<String> _insercoesProfessor = [
+    "INSERT INTO professor (nome, telefone) VALUES ('João Silva', '(11) 98765-4321')",
+    "INSERT INTO professor (nome, telefone) VALUES ('Maria Oliveira', '(21) 97654-3210')",
+    "INSERT INTO professor (nome, telefone) VALUES ('Pedro Santos', '(31) 96543-2109')",
+  ];
+
+  static const List<String> _insercoesProfessorModalidade = [
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (1, '1')", // João Silva: Musculação
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (1, '2')", // João Silva: Yoga
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (2, '3')", // Maria Oliveira: Pilates
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (2, '4')", // Maria Oliveira: Treinamento Funcional
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (3, '1')", // Pedro Santos: Musculação
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (3, '5')", // Pedro Santos: Spinning
+  ];
+
   static const List<List<String>> comandosInsercoes = [
     _insercoesAcademia,
     _insercoesEquipamento,
@@ -199,6 +234,8 @@ class ScriptSQLite {
     _insercoesAluno,
     _insercoesAlunoObjetivo,
     _insercoesModalidade,
+    _insercoesProfessor,
+    _insercoesProfessorModalidade,
   ];
 
   Future<void> criarTabelas(Database db) async {

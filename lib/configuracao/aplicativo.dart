@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_professor.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_modalidades.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_equipamentos.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_equipamentos.dart';
@@ -6,6 +7,7 @@ import 'package:projeto_ddm_ifpr/widget/widget_agendamento.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_academias.dart'
     hide Scaffold;
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_alunos.dart';
+import 'package:projeto_ddm_ifpr/widget/widget_cadastro_modalidades.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_menu.dart';
 import 'package:projeto_ddm_ifpr/configuracao/rotas.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_academias.dart';
@@ -16,6 +18,8 @@ import 'package:projeto_ddm_ifpr/widget/widget_cadastro_treinos.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_exercicios.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widgete_listaobjetivos.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_treinos.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_professor.dart';
+import 'package:projeto_ddm_ifpr/widget/widget_cadastro_professores.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_listas.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastros.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_academia.dart';
@@ -24,7 +28,6 @@ import 'package:projeto_ddm_ifpr/dto/dto_objetivo.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_exercicio.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_treino.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_aluno.dart';
-import 'package:projeto_ddm_ifpr/widget/widget_cadastro_modalidades.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_modalidade.dart';
 
 class Aplicativo extends StatelessWidget {
@@ -70,6 +73,11 @@ class Aplicativo extends StatelessWidget {
             return MaterialPageRoute(
                 builder: (_) =>
                     WidgetCadastroModalidades(modalidade: modalidade));
+          case Rotas.cadastroProfessores:
+            final professor = settings.arguments as ProfessorDTO?;
+            return MaterialPageRoute(
+                builder: (_) =>
+                    WidgetCadastroProfessores(professor: professor));
           case Rotas.listaAcademias:
             return MaterialPageRoute(
                 builder: (_) => const WidgetListaAcademias());
@@ -88,14 +96,14 @@ class Aplicativo extends StatelessWidget {
                 builder: (_) => const WidgetListaTreinos());
           case Rotas.listaModalidades:
             return MaterialPageRoute(builder: (_) => const ListaModalidade());
+          case Rotas.listaProfessores:
+            return MaterialPageRoute(builder: (_) => const ListaProfessor());
           case Rotas.agendamento:
             return MaterialPageRoute(builder: (_) => const WidgetAgendamento());
           case Rotas.listas:
             return MaterialPageRoute(builder: (_) => const WidgetListas());
           case Rotas.cadastros:
             return MaterialPageRoute(builder: (_) => const WidgetCadastros());
-          // FAZER: case Rotas.detalhesAgendamento:
-          //   return MaterialPageRoute(builder: (_) => const WidgetDetalhesAgendamento());
           default:
             return MaterialPageRoute(
               builder: (_) => const Scaffold(
