@@ -78,6 +78,18 @@ class WidgetCadastros extends StatelessWidget {
               icon: Icons.schedule,
               route: Rotas.agendamento,
             ),
+            _buildGridButton(
+              context,
+              title: 'Cadastrar Dieta',
+              icon: Icons.food_bank,
+              route: Rotas.cadastroDietas,
+            ),
+            _buildGridButton(
+              context,
+              title: 'Cadastrar Receita',
+              icon: Icons.restaurant_menu,
+              route: Rotas.cadastroReceitas,
+            ),
           ],
         ),
       ),

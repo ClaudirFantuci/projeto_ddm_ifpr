@@ -8,6 +8,8 @@ class Rotas {
   static const cadastroEquipamento = '/cadastroEquipamento';
   static const cadastroModalidade = '/cadastroModalidade';
   static const cadastroProfessores = '/cadastroProfessores';
+  static const cadastroDietas = '/cadastroDietas';
+  static const cadastroReceitas = '/cadastroReceitas';
   static const listaAcademias = '/lista_academias';
   static const listaEquipamentos = '/listaEquipamentos';
   static const listaAlunos = '/lista_alunos';
@@ -16,6 +18,8 @@ class Rotas {
   static const listaExercicios = '/lista_exercicios';
   static const listaTreinos = '/lista_treinos';
   static const listaModalidades = '/listaModalidades';
+  static const listaDietas = '/lista_dietas';
+  static const listaReceitas = '/lista_receitas';
   static const agendamento = '/agendamento';
   static const detalhesAgendamento = '/detalhes_agendamento';
   static const listas = '/listas';

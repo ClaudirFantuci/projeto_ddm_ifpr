@@ -72,6 +72,18 @@ class WidgetListas extends StatelessWidget {
               icon: Icons.sports_gymnastics,
               route: Rotas.listaModalidades,
             ),
+            _buildGridButton(
+              context,
+              title: 'Dietas',
+              icon: Icons.food_bank,
+              route: Rotas.listaDietas,
+            ),
+            _buildGridButton(
+              context,
+              title: 'Receitas',
+              icon: Icons.restaurant_menu,
+              route: Rotas.listaReceitas,
+            ),
           ],
         ),
       ),

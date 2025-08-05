@@ -108,6 +108,27 @@ class ScriptSQLite {
     )
   ''';
 
+  static const String _criarTabelaDieta = '''
+    CREATE TABLE dieta (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      descricao TEXT,
+      objetivo TEXT
+    )
+  ''';
+
+  static const String _criarTabelaReceita = '''
+    CREATE TABLE receita (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      ingredientes TEXT,
+      modo_preparo TEXT,
+      valor_nutricional TEXT,
+      dieta_id INTEGER,
+      FOREIGN KEY (dieta_id) REFERENCES dieta(id)
+    )
+  ''';
+
   static const List<String> comandosCriarTabelas = [
     _criarTabelaAcademia,
     _criarTabelaEquipamento,
@@ -121,6 +142,8 @@ class ScriptSQLite {
     _criarTabelaModalidade,
     _criarTabelaProfessor,
     _criarTabelaProfessorModalidade,
+    _criarTabelaDieta,
+    _criarTabelaReceita,
   ];
 
   static const List<String> _insercoesAcademia = [
@@ -223,6 +246,20 @@ class ScriptSQLite {
     "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (3, '5')", // Pedro Santos: Spinning
   ];
 
+  static const List<String> _insercoesDieta = [
+    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Ganho de Massa', 'Plano alimentar para aumento de massa muscular', 'Ganhar massa muscular')",
+    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Perda de Peso', 'Plano alimentar para redução de gordura corporal', 'Perder peso')",
+    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Manutenção', 'Plano alimentar para manter peso e saúde', 'Melhorar condicionamento físico')",
+  ];
+
+  static const List<String> _insercoesReceita = [
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Shake de Proteína', 'Whey protein,leite,banana', 'Bater no liquidificador por 30 segundos', 'calorias:300,proteinas:30', 1)", // Dieta de Ganho de Massa
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Omelete de Claras', '6 claras,espinafre,tomate', 'Misturar os ingredientes e fritar em frigideira antiaderente', 'calorias:150,proteinas:20', 1)", // Dieta de Ganho de Massa
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Salada de Quinoa', 'Quinoa,frango desfiado,rúcula,azeite', 'Cozinhar quinoa e misturar com os demais ingredientes', 'calorias:200,proteinas:15', 2)", // Dieta de Perda de Peso
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Sopa de Legumes', 'Cenoura,abobrinha,brócolis,cebola', 'Cozinhar todos os ingredientes em água e temperar', 'calorias:100,proteinas:5', 2)", // Dieta de Perda de Peso
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Smoothie de Frutas', 'Morango,banana,iogurte natural', 'Bater no liquidificador até ficar homogêneo', 'calorias:180,proteinas:8', 3)", // Dieta de Manutenção
+  ];
+
   static const List<List<String>> comandosInsercoes = [
     _insercoesAcademia,
     _insercoesEquipamento,
@@ -236,6 +273,8 @@ class ScriptSQLite {
     _insercoesModalidade,
     _insercoesProfessor,
     _insercoesProfessorModalidade,
+    _insercoesDieta,
+    _insercoesReceita,
   ];
 
   Future<void> criarTabelas(Database db) async {
