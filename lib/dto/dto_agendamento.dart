@@ -1,15 +1,23 @@
-class DTOAgendamento {
-  String? id;
-  String alunoId; // Reference to DTOAluno ID
-  String academiaId; // Reference to DTOAcademia ID
-  String diaSemana;
-  String horario;
+// class DTOAgendamento {
+//   String? id;
+//   String diaSemana;
+//   String horario;
+//   String academiaId;
+//   String? academiaNome;
+//   String? turmaId;
+//   String? turmaNome;
+//   List<String> alunosIds;
+//   List<String>? alunosNomes;
 
-  DTOAgendamento({
-    this.id,
-    required this.alunoId,
-    required this.academiaId,
-    required this.diaSemana,
-    required this.horario,
-  });
-}
+//   DTOAgendamento({
+//     this.id,
+//     required this.diaSemana,
+//     required this.horario,
+//     required this.academiaId,
+//     this.academiaNome,
+//     this.turmaId,
+//     this.turmaNome,
+//     required this.alunosIds,
+//     this.alunosNomes,
+//   });
+// }
