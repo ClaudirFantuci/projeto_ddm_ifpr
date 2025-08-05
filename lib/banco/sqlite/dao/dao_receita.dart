@@ -1,32 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:projeto_ddm_ifpr/banco/sqlite/conexao.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_receita.dart';
-import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 
-class DAOReceita {
-  final String _criarTabelaReceita = '''
-    CREATE TABLE IF NOT EXISTS receita (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      ingredientes TEXT NOT NULL,
-      modo_preparo TEXT,
-      valor_nutricional TEXT,
-      dieta_id INTEGER,
-      FOREIGN KEY (dieta_id) REFERENCES dieta(id)
-    )
-  ''';
-
-  final String _criarTabelaReceitaDieta = '''
-    CREATE TABLE IF NOT EXISTS receita_dieta (
-      receita_id INTEGER NOT NULL,
-      dieta_id INTEGER NOT NULL,
-      PRIMARY KEY (receita_id, dieta_id),
-      FOREIGN KEY (receita_id) REFERENCES receita(id),
-      FOREIGN KEY (dieta_id) REFERENCES dieta(id)
-    )
-  ''';
-
+class DAOReceitas {
   final String _inserirReceita = '''
     INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id)
     VALUES (?, ?, ?, ?, ?)
@@ -74,32 +52,6 @@ class DAOReceita {
     GROUP BY r.id
   ''';
 
-  Future<void> criarTabelas() async {
-    final Database db = await ConexaoSQLite.database;
-    try {
-      await db.execute(_criarTabelaReceita);
-      await db.execute(_criarTabelaReceitaDieta);
-    } catch (e) {
-      debugPrint('Erro ao criar tabelas: $e');
-      throw Exception('Erro ao criar tabelas: $e');
-    }
-  }
-
-  Future<bool> verificarTabelas() async {
-    final Database db = await ConexaoSQLite.database;
-    try {
-      final result = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('receita', 'receita_dieta', 'dieta')",
-      );
-      final tables = result.map((row) => row['name'] as String).toList();
-      debugPrint('Tabelas encontradas: $tables');
-      return tables.contains('receita') && tables.contains('receita_dieta');
-    } catch (e) {
-      debugPrint('Erro ao verificar tabelas: $e');
-      return false;
-    }
-  }
-
   Map<String, dynamic> toMap(ReceitaDTO receita) {
     return {
       'id': receita.id,
@@ -116,9 +68,9 @@ class DAOReceita {
 
   ReceitaDTO fromMap(Map<String, dynamic> map) {
     try {
-      final List<String> dietasIds = map['dietas_ids'] != null
+      final List<String>? dietasIds = map['dietas_ids'] != null
           ? (map['dietas_ids'] as String).split(',')
-          : [];
+          : null;
       final List<String>? dietasNomes = map['dietas_nomes'] != null
           ? (map['dietas_nomes'] as String).split(',')
           : null;
@@ -162,18 +114,23 @@ class DAOReceita {
               receita.valorNutricional != null
                   ? jsonEncode(receita.valorNutricional)
                   : null,
-              receita.dietaId != null ? int.parse(receita.dietaId!) : null,
+              receita.dietaId != null ? int.tryParse(receita.dietaId!) : null,
             ],
           );
           receita.id = id.toString();
 
-          // Inserir dietas associadas
+          // Inserir associações com dietas
           if (receita.dietasNomes != null) {
             for (String dietaId in receita.dietasNomes!) {
-              await txn.rawInsert(
-                _inserirReceitaDieta,
-                [id, int.parse(dietaId)],
-              );
+              final parsedDietaId = int.tryParse(dietaId);
+              if (parsedDietaId != null) {
+                await txn.rawInsert(
+                  _inserirReceitaDieta,
+                  [id, parsedDietaId],
+                );
+              } else {
+                debugPrint('ID de dieta inválido ignorado: $dietaId');
+              }
             }
           }
         } else {
@@ -187,21 +144,26 @@ class DAOReceita {
               receita.valorNutricional != null
                   ? jsonEncode(receita.valorNutricional)
                   : null,
-              receita.dietaId != null ? int.parse(receita.dietaId!) : null,
+              receita.dietaId != null ? int.tryParse(receita.dietaId!) : null,
               int.parse(receita.id!),
             ],
           );
 
-          // Deletar associações existentes de dietas
+          // Deletar associações existentes
           await txn.rawDelete(_deletarReceitaDietas, [int.parse(receita.id!)]);
 
-          // Inserir dietas atualizadas
+          // Inserir novas associações
           if (receita.dietasNomes != null) {
             for (String dietaId in receita.dietasNomes!) {
-              await txn.rawInsert(
-                _inserirReceitaDieta,
-                [int.parse(receita.id!), int.parse(dietaId)],
-              );
+              final parsedDietaId = int.tryParse(dietaId);
+              if (parsedDietaId != null) {
+                await txn.rawInsert(
+                  _inserirReceitaDieta,
+                  [int.parse(receita.id!), parsedDietaId],
+                );
+              } else {
+                debugPrint('ID de dieta inválido ignorado: $dietaId');
+              }
             }
           }
         }
@@ -210,19 +172,6 @@ class DAOReceita {
     } catch (e) {
       debugPrint('Erro ao salvar receita: $e');
       throw Exception('Erro ao salvar receita: $e');
-    }
-  }
-
-  Future<void> excluir(int id) async {
-    final Database db = await ConexaoSQLite.database;
-    try {
-      await db.transaction((txn) async {
-        await txn.rawDelete(_deletarReceitaDietas, [id]);
-        await txn.rawDelete(_deletarReceita, [id]);
-      });
-    } catch (e) {
-      debugPrint('Erro ao excluir receita: $e');
-      throw Exception('Erro ao excluir receita: $e');
     }
   }
 
@@ -249,6 +198,19 @@ class DAOReceita {
     } catch (e) {
       debugPrint('Erro ao consultar receita por ID: $e');
       throw Exception('Erro ao consultar receita por ID: $e');
+    }
+  }
+
+  Future<void> excluir(int id) async {
+    final Database db = await ConexaoSQLite.database;
+    try {
+      await db.transaction((txn) async {
+        await txn.rawDelete(_deletarReceitaDietas, [id]);
+        await txn.rawDelete(_deletarReceita, [id]);
+      });
+    } catch (e) {
+      debugPrint('Erro ao excluir receita: $e');
+      throw Exception('Erro ao excluir receita: $e');
     }
   }
 }

@@ -11,7 +11,7 @@ class WidgetListaReceitas extends StatefulWidget {
 }
 
 class _WidgetListaReceitasState extends State<WidgetListaReceitas> {
-  final _dao = DAOReceita();
+  final DAOReceitas _dao = DAOReceitas();
   Key _futureBuilderKey = UniqueKey();
 
   void _refreshList() {
@@ -117,28 +117,16 @@ class _WidgetListaReceitasState extends State<WidgetListaReceitas> {
         future: _dao.consultarTodos(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.amber),
+            );
           } else if (snapshot.hasError) {
-            debugPrint('Erro ao carregar receitas: ${snapshot.error}');
+            print('Erro no FutureBuilder: ${snapshot.error}');
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Erro ao carregar receitas: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                    ),
-                    onPressed: _refreshList,
-                    child: const Text('Tentar Novamente'),
-                  ),
-                ],
+              child: Text(
+                'Erro ao carregar receitas: ${snapshot.error}',
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -170,7 +158,7 @@ class _WidgetListaReceitasState extends State<WidgetListaReceitas> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ingredientes: ${receita.ingredientes.join(", ") ?? "Nenhum"}',
+                        'Ingredientes: ${receita.ingredientes.join(", ")}',
                         style: const TextStyle(color: Colors.white),
                       ),
                       Text(

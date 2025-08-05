@@ -121,10 +121,20 @@ class ScriptSQLite {
     CREATE TABLE receita (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nome TEXT NOT NULL,
-      ingredientes TEXT,
+      ingredientes TEXT NOT NULL,
       modo_preparo TEXT,
       valor_nutricional TEXT,
       dieta_id INTEGER,
+      FOREIGN KEY (dieta_id) REFERENCES dieta(id)
+    )
+  ''';
+
+  static const String _criarTabelaReceitaDieta = '''
+    CREATE TABLE receita_dieta (
+      receita_id INTEGER NOT NULL,
+      dieta_id INTEGER NOT NULL,
+      PRIMARY KEY (receita_id, dieta_id),
+      FOREIGN KEY (receita_id) REFERENCES receita(id),
       FOREIGN KEY (dieta_id) REFERENCES dieta(id)
     )
   ''';
@@ -144,6 +154,7 @@ class ScriptSQLite {
     _criarTabelaProfessorModalidade,
     _criarTabelaDieta,
     _criarTabelaReceita,
+    _criarTabelaReceitaDieta,
   ];
 
   static const List<String> _insercoesAcademia = [
@@ -253,11 +264,20 @@ class ScriptSQLite {
   ];
 
   static const List<String> _insercoesReceita = [
-    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Shake de Proteína', 'Whey protein,leite,banana', 'Bater no liquidificador por 30 segundos', 'calorias:300,proteinas:30', 1)", // Dieta de Ganho de Massa
-    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Omelete de Claras', '6 claras,espinafre,tomate', 'Misturar os ingredientes e fritar em frigideira antiaderente', 'calorias:150,proteinas:20', 1)", // Dieta de Ganho de Massa
-    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Salada de Quinoa', 'Quinoa,frango desfiado,rúcula,azeite', 'Cozinhar quinoa e misturar com os demais ingredientes', 'calorias:200,proteinas:15', 2)", // Dieta de Perda de Peso
-    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Sopa de Legumes', 'Cenoura,abobrinha,brócolis,cebola', 'Cozinhar todos os ingredientes em água e temperar', 'calorias:100,proteinas:5', 2)", // Dieta de Perda de Peso
-    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Smoothie de Frutas', 'Morango,banana,iogurte natural', 'Bater no liquidificador até ficar homogêneo', 'calorias:180,proteinas:8', 3)", // Dieta de Manutenção
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Shake de Proteína', '[\"Whey protein\",\"leite\",\"banana\"]', 'Bater no liquidificador por 30 segundos', '{\"calorias\":300,\"proteinas\":30}', 1)",
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Omelete de Claras', '[\"6 claras\",\"espinafre\",\"tomate\"]', 'Misturar os ingredientes e fritar em frigideira antiaderente', '{\"calorias\":150,\"proteinas\":20}', 1)",
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Salada de Quinoa', '[\"Quinoa\",\"frango desfiado\",\"rúcula\",\"azeite\"]', 'Cozinhar quinoa e misturar com os demais ingredientes', '{\"calorias\":200,\"proteinas\":15}', 2)",
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Sopa de Legumes', '[\"Cenoura\",\"abobrinha\",\"brócolis\",\"cebola\"]', 'Cozinhar todos os ingredientes em água e temperar', '{\"calorias\":100,\"proteinas\":5}', 2)",
+    "INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id) VALUES ('Smoothie de Frutas', '[\"Morango\",\"banana\",\"iogurte natural\"]', 'Bater no liquidificador até ficar homogêneo', '{\"calorias\":180,\"proteinas\":8}', 3)",
+  ];
+
+  static const List<String> _insercoesReceitaDieta = [
+    "INSERT INTO receita_dieta (receita_id, dieta_id) VALUES (1, 1)", // Shake de Proteína: Dieta de Ganho de Massa
+    "INSERT INTO receita_dieta (receita_id, dieta_id) VALUES (2, 1)", // Omelete de Claras: Dieta de Ganho de Massa
+    "INSERT INTO receita_dieta (receita_id, dieta_id) VALUES (3, 2)", // Salada de Quinoa: Dieta de Perda de Peso
+    "INSERT INTO receita_dieta (receita_id, dieta_id) VALUES (4, 2)", // Sopa de Legumes: Dieta de Perda de Peso
+    "INSERT INTO receita_dieta (receita_id, dieta_id) VALUES (5, 3)", // Smoothie de Frutas: Dieta de Manutenção
+    "INSERT INTO receita_dieta (receita_id, dieta_id) VALUES (3, 3)", // Salada de Quinoa: Dieta de Manutenção (exemplo de múltiplas dietas)
   ];
 
   static const List<List<String>> comandosInsercoes = [
@@ -275,6 +295,7 @@ class ScriptSQLite {
     _insercoesProfessorModalidade,
     _insercoesDieta,
     _insercoesReceita,
+    _insercoesReceitaDieta,
   ];
 
   Future<void> criarTabelas(Database db) async {

@@ -19,7 +19,7 @@ class _WidgetCadastroDietasState extends State<WidgetCadastroDietas> {
   final _descricaoController = TextEditingController();
   final _objetivoController = TextEditingController();
   final _daoDieta = DAODieta();
-  final _daoReceita = DAOReceita();
+  final _daoReceita = DAOReceitas();
   List<ReceitaDTO> _receitas = [];
   List<String> _selectedReceitaIds = [];
 
@@ -38,9 +38,31 @@ class _WidgetCadastroDietasState extends State<WidgetCadastroDietas> {
   Future<void> _carregarReceitas() async {
     try {
       _receitas = await _daoReceita.consultarTodos();
+      print('Receitas carregadas: ${_receitas.map((r) => r.nome).toList()}');
+      // Validate existing receitasIds against loaded recipes
+      if (widget.dieta != null && widget.dieta!.receitasIds.isNotEmpty) {
+        final validReceitaIds = widget.dieta!.receitasIds
+            .where((id) => _receitas.any((receita) => receita.id == id))
+            .toList();
+        if (validReceitaIds.length != widget.dieta!.receitasIds.length) {
+          print(
+              'Receitas inválidas na dieta: ${widget.dieta!.receitasIds.where((id) => !_receitas.any((receita) => receita.id == id)).toList()}');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Algumas receitas associadas não foram encontradas. Atualizando lista.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+        _selectedReceitaIds = validReceitaIds;
+      }
       setState(() {});
     } catch (e) {
       if (mounted) {
+        print('Erro ao carregar receitas: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao carregar receitas: $e'),
@@ -61,22 +83,40 @@ class _WidgetCadastroDietasState extends State<WidgetCadastroDietas> {
 
   Future<void> _salvar() async {
     if (_formKey.currentState!.validate()) {
-      final dieta = DietaDTO(
-        id: widget.dieta?.id,
-        nome: _nomeController.text,
-        descricao: _descricaoController.text.isEmpty
-            ? null
-            : _descricaoController.text,
-        objetivo:
-            _objetivoController.text.isEmpty ? null : _objetivoController.text,
-        receitasIds: _selectedReceitaIds,
-        receitasNomes: _receitas
-            .where((r) => _selectedReceitaIds.contains(r.id))
-            .map((r) => r.nome)
-            .toList(),
-      );
-
       try {
+        // Validate selected recipe IDs
+        final validReceitaIds = _selectedReceitaIds
+            .where((id) => _receitas.any((receita) => receita.id == id))
+            .toList();
+        if (_selectedReceitaIds.length != validReceitaIds.length) {
+          print('Receitas inválidas detectadas: $_selectedReceitaIds');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Algumas receitas selecionadas não são válidas. Usando apenas receitas válidas.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+
+        final dieta = DietaDTO(
+          id: widget.dieta?.id,
+          nome: _nomeController.text,
+          descricao: _descricaoController.text.isEmpty
+              ? null
+              : _descricaoController.text,
+          objetivo: _objetivoController.text.isEmpty
+              ? null
+              : _objetivoController.text,
+          receitasIds: validReceitaIds,
+          receitasNomes: _receitas
+              .where((r) => validReceitaIds.contains(r.id))
+              .map((r) => r.nome)
+              .toList(),
+        );
+
         await _daoDieta.salvar(dieta);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -91,6 +131,7 @@ class _WidgetCadastroDietasState extends State<WidgetCadastroDietas> {
         }
       } catch (e) {
         if (mounted) {
+          print('Erro ao salvar dieta: $e');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Erro ao salvar dieta: $e'),
@@ -118,119 +159,128 @@ class _WidgetCadastroDietasState extends State<WidgetCadastroDietas> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nomeController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome da Dieta',
-                  hintText: 'Insira o nome da dieta',
-                  labelStyle: TextStyle(color: Colors.amber),
-                  hintStyle: TextStyle(color: Colors.amber),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'O nome da dieta é obrigatório';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descricaoController,
-                decoration: const InputDecoration(
-                  labelText: 'Descrição',
-                  hintText: 'Insira a descrição da dieta (opcional)',
-                  labelStyle: TextStyle(color: Colors.amber),
-                  hintStyle: TextStyle(color: Colors.amber),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _objetivoController,
-                decoration: const InputDecoration(
-                  labelText: 'Objetivo',
-                  hintText: 'Insira o objetivo da dieta (opcional)',
-                  labelStyle: TextStyle(color: Colors.amber),
-                  hintStyle: TextStyle(color: Colors.amber),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Receitas',
-                style: TextStyle(color: Colors.amber, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
-              if (_receitas.isEmpty)
-                const Text(
-                  'Carregando receitas...',
-                  style: TextStyle(color: Colors.white),
-                )
-              else
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _receitas.length,
-                    itemBuilder: (context, index) {
-                      final receita = _receitas[index];
-                      final isSelected =
-                          _selectedReceitaIds.contains(receita.id);
-                      return CheckboxListTile(
-                        title: Text(
-                          receita.nome,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        subtitle: Text(
-                          'Ingredientes: ${receita.ingredientes.join(", ") ?? "Nenhum"}',
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        value: isSelected,
-                        activeColor: Colors.amber,
-                        checkColor: Colors.black,
-                        onChanged: (value) {
-                          setState(() {
-                            if (value == true) {
-                              _selectedReceitaIds.add(receita.id!);
-                            } else {
-                              _selectedReceitaIds.remove(receita.id);
-                            }
-                          });
-                        },
-                      );
+          child: Card(
+            color: const Color.fromARGB(255, 36, 36, 36),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _nomeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nome da Dieta',
+                      hintText: 'Insira o nome da dieta',
+                      labelStyle: TextStyle(color: Colors.amber),
+                      hintStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'O nome da dieta é obrigatório';
+                      }
+                      return null;
                     },
                   ),
-                ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.black,
-                ),
-                onPressed: _salvar,
-                child: Text(widget.dieta == null ? 'Salvar' : 'Atualizar'),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descricaoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Descrição',
+                      hintText: 'Insira a descrição da dieta (opcional)',
+                      labelStyle: TextStyle(color: Colors.amber),
+                      hintStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _objetivoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Objetivo',
+                      hintText: 'Insira o objetivo da dieta (opcional)',
+                      labelStyle: TextStyle(color: Colors.amber),
+                      hintStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Receitas',
+                    style: TextStyle(color: Colors.amber, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_receitas.isEmpty)
+                    const Text(
+                      'Carregando receitas...',
+                      style: TextStyle(color: Colors.white),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _receitas.length,
+                        itemBuilder: (context, index) {
+                          final receita = _receitas[index];
+                          final isSelected =
+                              _selectedReceitaIds.contains(receita.id);
+                          return CheckboxListTile(
+                            title: Text(
+                              receita.nome,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            subtitle: Text(
+                              'Ingredientes: ${receita.ingredientes.join(", ") ?? "Nenhum"}',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                            value: isSelected,
+                            activeColor: Colors.amber,
+                            checkColor: Colors.black,
+                            onChanged: (value) {
+                              setState(() {
+                                if (value == true && receita.id != null) {
+                                  _selectedReceitaIds.add(receita.id!);
+                                } else {
+                                  _selectedReceitaIds.remove(receita.id);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                    ),
+                    onPressed: _salvar,
+                    child: Text(widget.dieta == null ? 'Salvar' : 'Atualizar'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

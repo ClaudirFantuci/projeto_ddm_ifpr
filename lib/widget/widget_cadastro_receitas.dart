@@ -19,10 +19,10 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
   final _ingredientesController = TextEditingController();
   final _modoPreparoController = TextEditingController();
   final _valorNutricionalController = TextEditingController();
-  final _daoReceita = DAOReceita();
+  final _daoReceitas = DAOReceitas();
   final _daoDieta = DAODieta();
   List<DietaDTO> _dietas = [];
-  List<String> _selectedDietasIds = [];
+  List<String> _selectedDietaIds = [];
 
   @override
   void initState() {
@@ -32,21 +32,44 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
       _nomeController.text = widget.receita!.nome;
       _ingredientesController.text = widget.receita!.ingredientes.join(', ');
       _modoPreparoController.text = widget.receita!.modoPreparo ?? '';
-      _valorNutricionalController.text = widget
-              .receita!.valorNutricional?.entries
-              .map((e) => '${e.key}: ${e.value}')
-              .join(', ') ??
-          '';
-      _selectedDietasIds = widget.receita!.dietasNomes ?? [];
+      _valorNutricionalController.text =
+          widget.receita!.valorNutricional != null
+              ? widget.receita!.valorNutricional!.entries
+                  .map((e) => '${e.key}:${e.value}')
+                  .join(',')
+              : '';
+      _selectedDietaIds = widget.receita!.dietasNomes ?? [];
     }
   }
 
   Future<void> _carregarDietas() async {
     try {
       _dietas = await _daoDieta.consultarTodos();
+      print('Dietas carregadas: ${_dietas.map((d) => d.nome).toList()}');
+      // Validate existing dietasNomes against loaded diets
+      if (widget.receita != null && widget.receita!.dietasNomes != null) {
+        final validDietaIds = widget.receita!.dietasNomes!
+            .where((id) => _dietas.any((dieta) => dieta.id == id))
+            .toList();
+        if (validDietaIds.length != widget.receita!.dietasNomes!.length) {
+          print(
+              'Dietas inválidas no receita: ${widget.receita!.dietasNomes!.where((id) => !_dietas.any((dieta) => dieta.id == id)).toList()}');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Algumas dietas associadas não foram encontradas. Atualizando lista.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+        _selectedDietaIds = validDietaIds;
+      }
       setState(() {});
     } catch (e) {
       if (mounted) {
+        print('Erro ao carregar dietas: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao carregar dietas: $e'),
@@ -66,113 +89,83 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
     super.dispose();
   }
 
-  Future<void> _selecionarDietas() async {
-    final List<String> tempSelectedDietasIds = List.from(_selectedDietasIds);
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color.fromARGB(255, 36, 36, 36),
-        title: const Text(
-          'Selecionar Dietas',
-          style: TextStyle(color: Colors.amber),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: _dietas.length,
-            itemBuilder: (context, index) {
-              final dieta = _dietas[index];
-              return CheckboxListTile(
-                title: Text(dieta.nome,
-                    style: const TextStyle(color: Colors.white)),
-                activeColor: Colors.amber,
-                checkColor: Colors.black,
-                value: tempSelectedDietasIds.contains(dieta.id),
-                onChanged: (bool? value) {
-                  setState(() {
-                    if (value == true) {
-                      tempSelectedDietasIds.add(dieta.id!);
-                    } else {
-                      tempSelectedDietasIds.remove(dieta.id);
-                    }
-                  });
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.red)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child:
-                const Text('Confirmar', style: TextStyle(color: Colors.amber)),
-          ),
-        ],
-      ),
-    );
-
-    if (result == true) {
-      setState(() {
-        _selectedDietasIds = tempSelectedDietasIds;
-      });
-    }
-  }
-
   Future<void> _salvar() async {
     if (_formKey.currentState!.validate()) {
-      final ingredientes = _ingredientesController.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
+      try {
+        // Parse ingredientes
+        final ingredientes = _ingredientesController.text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
 
-      Map<String, double>? valorNutricional;
-      if (_valorNutricionalController.text.isNotEmpty) {
-        try {
-          valorNutricional = Map.fromEntries(
-            _valorNutricionalController.text.split(',').map((e) {
-              final parts = e.split(':').map((p) => p.trim()).toList();
-              if (parts.length != 2 || double.tryParse(parts[1]) == null) {
-                throw FormatException(
-                    'Formato inválido para valor nutricional');
+        // Parse valorNutricional with robust validation
+        Map<String, double>? valorNutricional;
+        if (_valorNutricionalController.text.isNotEmpty) {
+          valorNutricional = {};
+          final pairs = _valorNutricionalController.text.split(',');
+          for (var pair in pairs) {
+            final parts = pair.split(':');
+            if (parts.length != 2 || parts[0].trim().isEmpty) {
+              print('Par inválido ignorado: $pair');
+              continue;
+            }
+            try {
+              final value = double.tryParse(parts[1].trim());
+              if (value == null) {
+                print('Valor numérico inválido: ${parts[1].trim()}');
+                continue;
               }
-              return MapEntry(parts[0], double.parse(parts[1]));
-            }),
-          );
-        } catch (e) {
+              valorNutricional[parts[0].trim()] = value;
+            } catch (e) {
+              print('Erro ao parsear valor nutricional: $pair, erro: $e');
+              continue;
+            }
+          }
+          if (valorNutricional.isEmpty) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      'Nenhum valor nutricional válido fornecido. Continuando sem valores nutricionais.'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+            valorNutricional = null;
+          }
+        }
+
+        // Validate diet selection
+        final validDietaIds = _selectedDietaIds
+            .where((id) => _dietas.any((dieta) => dieta.id == id))
+            .toList();
+        if (_selectedDietaIds.length != validDietaIds.length) {
+          print('Dietas inválidas detectadas: $_selectedDietaIds');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text(
-                    'Erro: Valor nutricional deve estar no formato "chave: valor, chave: valor" (ex.: calorias: 300, proteinas: 20)'),
-                backgroundColor: Colors.red,
+                content: Text(
+                    'Algumas dietas selecionadas não são válidas. Usando apenas dietas válidas.'),
+                backgroundColor: Colors.orange,
               ),
             );
           }
-          return;
         }
-      }
 
-      final receita = ReceitaDTO(
-        id: widget.receita?.id,
-        nome: _nomeController.text,
-        ingredientes: ingredientes,
-        modoPreparo: _modoPreparoController.text.isEmpty
-            ? null
-            : _modoPreparoController.text,
-        valorNutricional: valorNutricional,
-        dietaId:
-            _selectedDietasIds.isNotEmpty ? _selectedDietasIds.first : null,
-        dietasNomes: _selectedDietasIds,
-      );
+        final receita = ReceitaDTO(
+          id: widget.receita?.id,
+          nome: _nomeController.text,
+          ingredientes: ingredientes,
+          modoPreparo: _modoPreparoController.text.isEmpty
+              ? null
+              : _modoPreparoController.text,
+          valorNutricional: valorNutricional,
+          dietaId: validDietaIds.isNotEmpty ? validDietaIds.first : null,
+          dietasNomes: validDietaIds,
+        );
 
-      try {
-        await _daoReceita.salvar(receita);
+        await _daoReceitas.salvar(receita);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -186,6 +179,7 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
         }
       } catch (e) {
         if (mounted) {
+          print('Erro ao salvar receita: $e');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Erro ao salvar receita: $e'),
@@ -213,97 +207,21 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  controller: _nomeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nome da Receita',
-                    hintText: 'Insira o nome da receita',
-                    labelStyle: TextStyle(color: Colors.amber),
-                    hintStyle: TextStyle(color: Colors.amber),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'O nome da receita é obrigatório';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _ingredientesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Ingredientes',
-                    hintText: 'Insira os ingredientes, separados por vírgula',
-                    labelStyle: TextStyle(color: Colors.amber),
-                    hintStyle: TextStyle(color: Colors.amber),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Os ingredientes são obrigatórios';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _modoPreparoController,
-                  decoration: const InputDecoration(
-                    labelText: 'Modo de Preparo',
-                    hintText: 'Insira o modo de preparo (opcional)',
-                    labelStyle: TextStyle(color: Colors.amber),
-                    hintStyle: TextStyle(color: Colors.amber),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _valorNutricionalController,
-                  decoration: const InputDecoration(
-                    labelText: 'Valor Nutricional',
-                    hintText:
-                        'Insira como "calorias: 300, proteinas: 20" (opcional)',
-                    labelStyle: TextStyle(color: Colors.amber),
-                    hintStyle: TextStyle(color: Colors.amber),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: _selecionarDietas,
-                  child: InputDecorator(
+          child: Card(
+            color: const Color.fromARGB(255, 36, 36, 36),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _nomeController,
                     decoration: const InputDecoration(
-                      labelText: 'Dietas Associadas',
-                      hintText: 'Toque para selecionar dietas',
+                      labelText: 'Nome da Receita',
+                      hintText: 'Insira o nome da receita',
                       labelStyle: TextStyle(color: Colors.amber),
                       hintStyle: TextStyle(color: Colors.amber),
                       enabledBorder: UnderlineInputBorder(
@@ -313,28 +231,129 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
                         borderSide: BorderSide(color: Colors.amber),
                       ),
                     ),
-                    child: Text(
-                      _selectedDietasIds.isEmpty
-                          ? 'Nenhuma dieta selecionada'
-                          : _dietas
-                              .where((dieta) =>
-                                  _selectedDietasIds.contains(dieta.id))
-                              .map((dieta) => dieta.nome)
-                              .join(', '),
-                      style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'O nome da receita é obrigatório';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _ingredientesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Ingredientes',
+                      hintText: 'Insira os ingredientes separados por vírgula',
+                      labelStyle: TextStyle(color: Colors.amber),
+                      hintStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
                     ),
+                    style: const TextStyle(color: Colors.white),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Os ingredientes são obrigatórios';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black,
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _modoPreparoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Modo de Preparo',
+                      hintText: 'Insira o modo de preparo (opcional)',
+                      labelStyle: TextStyle(color: Colors.amber),
+                      hintStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  onPressed: _salvar,
-                  child: Text(widget.receita == null ? 'Salvar' : 'Atualizar'),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _valorNutricionalController,
+                    decoration: const InputDecoration(
+                      labelText: 'Valores Nutricionais',
+                      hintText: 'Ex: calorias:300,proteinas:20 (opcional)',
+                      labelStyle: TextStyle(color: Colors.amber),
+                      hintStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Dietas',
+                    style: TextStyle(color: Colors.amber, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_dietas.isEmpty)
+                    const Text(
+                      'Carregando dietas...',
+                      style: TextStyle(color: Colors.white),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _dietas.length,
+                        itemBuilder: (context, index) {
+                          final dieta = _dietas[index];
+                          final isSelected =
+                              _selectedDietaIds.contains(dieta.id);
+                          return CheckboxListTile(
+                            title: Text(
+                              dieta.nome,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            subtitle: Text(
+                              dieta.descricao ?? 'Sem descrição',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                            value: isSelected,
+                            activeColor: Colors.amber,
+                            checkColor: Colors.black,
+                            onChanged: (value) {
+                              setState(() {
+                                if (value == true) {
+                                  if (dieta.id != null) {
+                                    _selectedDietaIds.add(dieta.id!);
+                                  }
+                                } else {
+                                  _selectedDietaIds.remove(dieta.id);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                    ),
+                    onPressed: _salvar,
+                    child:
+                        Text(widget.receita == null ? 'Salvar' : 'Atualizar'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

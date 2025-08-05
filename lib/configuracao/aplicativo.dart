@@ -115,8 +115,7 @@ class Aplicativo extends StatelessWidget {
           case Rotas.listaDietas:
             return MaterialPageRoute(builder: (_) => const WidgetListaDietas());
           case Rotas.listaReceitas:
-            return MaterialPageRoute(
-                builder: (_) => const WidgetListaReceitas());
+            return MaterialPageRoute(builder: (_) => const WidgetListaReceitas());
           case Rotas.agendamento:
             return MaterialPageRoute(builder: (_) => const WidgetAgendamento());
           case Rotas.listas:
