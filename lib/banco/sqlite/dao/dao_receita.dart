@@ -1,87 +1,254 @@
+import 'package:flutter/foundation.dart';
 import 'package:projeto_ddm_ifpr/banco/sqlite/conexao.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_receita.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 
 class DAOReceita {
-  Future<Database> _getDatabase() async {
-    return await ConexaoSQLite.get();
+  final String _criarTabelaReceita = '''
+    CREATE TABLE IF NOT EXISTS receita (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      ingredientes TEXT NOT NULL,
+      modo_preparo TEXT,
+      valor_nutricional TEXT,
+      dieta_id INTEGER,
+      FOREIGN KEY (dieta_id) REFERENCES dieta(id)
+    )
+  ''';
+
+  final String _criarTabelaReceitaDieta = '''
+    CREATE TABLE IF NOT EXISTS receita_dieta (
+      receita_id INTEGER NOT NULL,
+      dieta_id INTEGER NOT NULL,
+      PRIMARY KEY (receita_id, dieta_id),
+      FOREIGN KEY (receita_id) REFERENCES receita(id),
+      FOREIGN KEY (dieta_id) REFERENCES dieta(id)
+    )
+  ''';
+
+  final String _inserirReceita = '''
+    INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id)
+    VALUES (?, ?, ?, ?, ?)
+  ''';
+
+  final String _atualizarReceita = '''
+    UPDATE receita
+    SET nome = ?, ingredientes = ?, modo_preparo = ?, valor_nutricional = ?, dieta_id = ?
+    WHERE id = ?
+  ''';
+
+  final String _deletarReceita = '''
+    DELETE FROM receita
+    WHERE id = ?
+  ''';
+
+  final String _deletarReceitaDietas = '''
+    DELETE FROM receita_dieta
+    WHERE receita_id = ?
+  ''';
+
+  final String _inserirReceitaDieta = '''
+    INSERT INTO receita_dieta (receita_id, dieta_id)
+    VALUES (?, ?)
+  ''';
+
+  final String _consultarTodos = '''
+    SELECT r.id, r.nome, r.ingredientes, r.modo_preparo, r.valor_nutricional, r.dieta_id,
+           GROUP_CONCAT(rd.dieta_id) as dietas_ids,
+           GROUP_CONCAT(COALESCE(d.nome, '')) as dietas_nomes
+    FROM receita r
+    LEFT JOIN receita_dieta rd ON r.id = rd.receita_id
+    LEFT JOIN dieta d ON rd.dieta_id = d.id
+    GROUP BY r.id
+  ''';
+
+  final String _consultarPorId = '''
+    SELECT r.id, r.nome, r.ingredientes, r.modo_preparo, r.valor_nutricional, r.dieta_id,
+           GROUP_CONCAT(rd.dieta_id) as dietas_ids,
+           GROUP_CONCAT(COALESCE(d.nome, '')) as dietas_nomes
+    FROM receita r
+    LEFT JOIN receita_dieta rd ON r.id = rd.receita_id
+    LEFT JOIN dieta d ON rd.dieta_id = d.id
+    WHERE r.id = ?
+    GROUP BY r.id
+  ''';
+
+  Future<void> criarTabelas() async {
+    final Database db = await ConexaoSQLite.database;
+    try {
+      await db.execute(_criarTabelaReceita);
+      await db.execute(_criarTabelaReceitaDieta);
+    } catch (e) {
+      debugPrint('Erro ao criar tabelas: $e');
+      throw Exception('Erro ao criar tabelas: $e');
+    }
+  }
+
+  Future<bool> verificarTabelas() async {
+    final Database db = await ConexaoSQLite.database;
+    try {
+      final result = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('receita', 'receita_dieta', 'dieta')",
+      );
+      final tables = result.map((row) => row['name'] as String).toList();
+      debugPrint('Tabelas encontradas: $tables');
+      return tables.contains('receita') && tables.contains('receita_dieta');
+    } catch (e) {
+      debugPrint('Erro ao verificar tabelas: $e');
+      return false;
+    }
+  }
+
+  Map<String, dynamic> toMap(ReceitaDTO receita) {
+    return {
+      'id': receita.id,
+      'nome': receita.nome,
+      'ingredientes': jsonEncode(receita.ingredientes),
+      'modo_preparo': receita.modoPreparo,
+      'valor_nutricional': receita.valorNutricional != null
+          ? jsonEncode(receita.valorNutricional)
+          : null,
+      'dieta_id': receita.dietaId,
+      'dietas_nomes': receita.dietasNomes?.join(','),
+    };
+  }
+
+  ReceitaDTO fromMap(Map<String, dynamic> map) {
+    try {
+      final List<String> dietasIds = map['dietas_ids'] != null
+          ? (map['dietas_ids'] as String).split(',')
+          : [];
+      final List<String>? dietasNomes = map['dietas_nomes'] != null
+          ? (map['dietas_nomes'] as String).split(',')
+          : null;
+
+      return ReceitaDTO(
+        id: map['id']?.toString(),
+        nome: map['nome'] as String? ?? 'Nome desconhecido',
+        ingredientes: map['ingredientes'] != null
+            ? List<String>.from(jsonDecode(map['ingredientes'] as String))
+            : [],
+        modoPreparo: map['modo_preparo'] as String?,
+        valorNutricional: map['valor_nutricional'] != null
+            ? Map<String, double>.from(
+                jsonDecode(map['valor_nutricional'] as String).map(
+                  (key, value) =>
+                      MapEntry(key, value is int ? value.toDouble() : value),
+                ),
+              )
+            : null,
+        dietaId: map['dieta_id']?.toString(),
+        dietasNomes: dietasNomes,
+      );
+    } catch (e) {
+      debugPrint('Erro ao parsear mapa para ReceitaDTO: $e');
+      throw Exception('Erro ao parsear receita: $e');
+    }
   }
 
   Future<ReceitaDTO> salvar(ReceitaDTO receita) async {
-    final db = await _getDatabase();
+    final Database db = await ConexaoSQLite.database;
     try {
       await db.transaction((txn) async {
-        final receitaMap = {
-          'nome': receita.nome,
-          'ingredientes': jsonEncode(receita.ingredientes),
-          'modo_preparo': receita.modoPreparo,
-          'valor_nutricional': receita.valorNutricional != null
-              ? jsonEncode(receita.valorNutricional)
-              : null,
-          'dieta_id':
-              receita.dietaId != null ? int.parse(receita.dietaId!) : null,
-        };
-
         if (receita.id == null) {
           // Inserção
-          final id = await txn.insert('receita', receitaMap);
+          final int id = await txn.rawInsert(
+            _inserirReceita,
+            [
+              receita.nome,
+              jsonEncode(receita.ingredientes),
+              receita.modoPreparo,
+              receita.valorNutricional != null
+                  ? jsonEncode(receita.valorNutricional)
+                  : null,
+              receita.dietaId != null ? int.parse(receita.dietaId!) : null,
+            ],
+          );
           receita.id = id.toString();
+
+          // Inserir dietas associadas
+          if (receita.dietasNomes != null) {
+            for (String dietaId in receita.dietasNomes!) {
+              await txn.rawInsert(
+                _inserirReceitaDieta,
+                [id, int.parse(dietaId)],
+              );
+            }
+          }
         } else {
           // Atualização
-          await txn.update(
-            'receita',
-            receitaMap,
-            where: 'id = ?',
-            whereArgs: [int.parse(receita.id!)],
+          await txn.rawUpdate(
+            _atualizarReceita,
+            [
+              receita.nome,
+              jsonEncode(receita.ingredientes),
+              receita.modoPreparo,
+              receita.valorNutricional != null
+                  ? jsonEncode(receita.valorNutricional)
+                  : null,
+              receita.dietaId != null ? int.parse(receita.dietaId!) : null,
+              int.parse(receita.id!),
+            ],
           );
+
+          // Deletar associações existentes de dietas
+          await txn.rawDelete(_deletarReceitaDietas, [int.parse(receita.id!)]);
+
+          // Inserir dietas atualizadas
+          if (receita.dietasNomes != null) {
+            for (String dietaId in receita.dietasNomes!) {
+              await txn.rawInsert(
+                _inserirReceitaDieta,
+                [int.parse(receita.id!), int.parse(dietaId)],
+              );
+            }
+          }
         }
       });
       return receita;
     } catch (e) {
+      debugPrint('Erro ao salvar receita: $e');
       throw Exception('Erro ao salvar receita: $e');
     }
   }
 
   Future<void> excluir(int id) async {
-    final db = await _getDatabase();
+    final Database db = await ConexaoSQLite.database;
     try {
       await db.transaction((txn) async {
-        await txn.delete(
-          'receita',
-          where: 'id = ?',
-          whereArgs: [id],
-        );
+        await txn.rawDelete(_deletarReceitaDietas, [id]);
+        await txn.rawDelete(_deletarReceita, [id]);
       });
     } catch (e) {
+      debugPrint('Erro ao excluir receita: $e');
       throw Exception('Erro ao excluir receita: $e');
     }
   }
 
   Future<List<ReceitaDTO>> consultarTodos() async {
-    final db = await _getDatabase();
+    final Database db = await ConexaoSQLite.database;
     try {
-      final resultado = await db.query('receita');
-      return resultado.map((map) {
-        return ReceitaDTO(
-          id: map['id'].toString(),
-          nome: map['nome'] as String,
-          ingredientes:
-              List<String>.from(jsonDecode(map['ingredientes'] as String)),
-          modoPreparo: map['modo_preparo'] as String?,
-          valorNutricional: map['valor_nutricional'] != null
-              ? Map<String, double>.from(
-                  jsonDecode(map['valor_nutricional'] as String).map(
-                    (key, value) =>
-                        MapEntry(key, value is int ? value.toDouble() : value),
-                  ),
-                )
-              : null,
-          dietaId: map['dieta_id']?.toString(),
-        );
-      }).toList();
+      final List<Map<String, dynamic>> maps =
+          await db.rawQuery(_consultarTodos);
+      debugPrint('Receitas carregadas: ${maps.length}');
+      return maps.map((map) => fromMap(map)).toList();
     } catch (e) {
+      debugPrint('Erro ao consultar receitas: $e');
       throw Exception('Erro ao consultar receitas: $e');
+    }
+  }
+
+  Future<ReceitaDTO?> consultarPorId(int id) async {
+    final Database db = await ConexaoSQLite.database;
+    try {
+      final List<Map<String, dynamic>> maps =
+          await db.rawQuery(_consultarPorId, [id]);
+      if (maps.isEmpty) return null;
+      return fromMap(maps.first);
+    } catch (e) {
+      debugPrint('Erro ao consultar receita por ID: $e');
+      throw Exception('Erro ao consultar receita por ID: $e');
     }
   }
 }

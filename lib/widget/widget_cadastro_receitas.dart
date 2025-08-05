@@ -22,7 +22,7 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
   final _daoReceita = DAOReceita();
   final _daoDieta = DAODieta();
   List<DietaDTO> _dietas = [];
-  String? _selectedDietaId;
+  List<String> _selectedDietasIds = [];
 
   @override
   void initState() {
@@ -37,16 +37,13 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
               .map((e) => '${e.key}: ${e.value}')
               .join(', ') ??
           '';
-      _selectedDietaId = widget.receita!.dietaId;
+      _selectedDietasIds = widget.receita!.dietasNomes ?? [];
     }
   }
 
   Future<void> _carregarDietas() async {
     try {
       _dietas = await _daoDieta.consultarTodos();
-      if (_dietas.isNotEmpty && _selectedDietaId == null) {
-        _selectedDietaId = _dietas.first.id; // Valor padrão: primeira dieta
-      }
       setState(() {});
     } catch (e) {
       if (mounted) {
@@ -67,6 +64,63 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
     _modoPreparoController.dispose();
     _valorNutricionalController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selecionarDietas() async {
+    final List<String> tempSelectedDietasIds = List.from(_selectedDietasIds);
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color.fromARGB(255, 36, 36, 36),
+        title: const Text(
+          'Selecionar Dietas',
+          style: TextStyle(color: Colors.amber),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _dietas.length,
+            itemBuilder: (context, index) {
+              final dieta = _dietas[index];
+              return CheckboxListTile(
+                title: Text(dieta.nome,
+                    style: const TextStyle(color: Colors.white)),
+                activeColor: Colors.amber,
+                checkColor: Colors.black,
+                value: tempSelectedDietasIds.contains(dieta.id),
+                onChanged: (bool? value) {
+                  setState(() {
+                    if (value == true) {
+                      tempSelectedDietasIds.add(dieta.id!);
+                    } else {
+                      tempSelectedDietasIds.remove(dieta.id);
+                    }
+                  });
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child:
+                const Text('Confirmar', style: TextStyle(color: Colors.amber)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      setState(() {
+        _selectedDietasIds = tempSelectedDietasIds;
+      });
+    }
   }
 
   Future<void> _salvar() async {
@@ -112,7 +166,9 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
             ? null
             : _modoPreparoController.text,
         valorNutricional: valorNutricional,
-        dietaId: _selectedDietaId!, // Forçado não nulo, pois validado
+        dietaId:
+            _selectedDietasIds.isNotEmpty ? _selectedDietasIds.first : null,
+        dietasNomes: _selectedDietasIds,
       );
 
       try {
@@ -242,38 +298,32 @@ class _WidgetCadastroReceitasState extends State<WidgetCadastroReceitas> {
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Dieta Associada',
-                    hintText: 'Selecione uma dieta',
-                    labelStyle: TextStyle(color: Colors.amber),
-                    hintStyle: TextStyle(color: Colors.amber),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
+                GestureDetector(
+                  onTap: _selecionarDietas,
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Dietas Associadas',
+                      hintText: 'Toque para selecionar dietas',
+                      labelStyle: TextStyle(color: Colors.amber),
+                      hintStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.amber),
+                      ),
                     ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.amber),
+                    child: Text(
+                      _selectedDietasIds.isEmpty
+                          ? 'Nenhuma dieta selecionada'
+                          : _dietas
+                              .where((dieta) =>
+                                  _selectedDietasIds.contains(dieta.id))
+                              .map((dieta) => dieta.nome)
+                              .join(', '),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  style: const TextStyle(color: Colors.white),
-                  value: _selectedDietaId,
-                  items: _dietas.map((dieta) {
-                    return DropdownMenuItem<String>(
-                      value: dieta.id,
-                      child: Text(dieta.nome),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedDietaId = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'A dieta associada é obrigatória';
-                    }
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(

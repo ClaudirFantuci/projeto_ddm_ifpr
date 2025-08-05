@@ -119,13 +119,35 @@ class _WidgetListaReceitasState extends State<WidgetListaReceitas> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return const Center(
-                child: Text('Erro ao carregar receitas',
-                    style: TextStyle(color: Colors.white)));
+            debugPrint('Erro ao carregar receitas: ${snapshot.error}');
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Erro ao carregar receitas: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                    ),
+                    onPressed: _refreshList,
+                    child: const Text('Tentar Novamente'),
+                  ),
+                ],
+              ),
+            );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-                child: Text('Nenhuma receita encontrada',
-                    style: TextStyle(color: Colors.white)));
+              child: Text(
+                'Nenhuma receita encontrada',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           }
 
           final receitas = snapshot.data!;
@@ -144,9 +166,18 @@ class _WidgetListaReceitasState extends State<WidgetListaReceitas> {
                     receita.nome,
                     style: const TextStyle(color: Colors.amber),
                   ),
-                  subtitle: Text(
-                    'Ingredientes: ${receita.ingredientes.join(", ") ?? "Nenhum"}',
-                    style: const TextStyle(color: Colors.white),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ingredientes: ${receita.ingredientes.join(", ") ?? "Nenhum"}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        'Dietas: ${receita.dietasNomes?.join(", ") ?? "Nenhuma"}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
