@@ -68,6 +68,12 @@ class WidgetListas extends StatelessWidget {
             ),
             _buildGridButton(
               context,
+              title: 'Turmas',
+              icon: Icons.group,
+              route: Rotas.listaTurmas,
+            ),
+            _buildGridButton(
+              context,
               title: 'Modalidades',
               icon: Icons.sports_gymnastics,
               route: Rotas.listaModalidades,

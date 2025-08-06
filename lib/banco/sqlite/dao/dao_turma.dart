@@ -3,42 +3,14 @@ import 'package:sqflite/sqflite.dart';
 import 'package:projeto_ddm_ifpr/banco/sqlite/conexao.dart';
 
 class DAOTurma {
-  final String _criarTabelaTurma = '''
-    CREATE TABLE turma (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      horario TEXT
-    )
-  ''';
-
-  final String _criarTabelaTurmaProfessor = '''
-    CREATE TABLE turma_professor (
-      turma_id INTEGER NOT NULL,
-      professor_id INTEGER NOT NULL,
-      PRIMARY KEY (turma_id, professor_id),
-      FOREIGN KEY (turma_id) REFERENCES turma(id),
-      FOREIGN KEY (professor_id) REFERENCES professor(id)
-    )
-  ''';
-
-  final String _criarTabelaTurmaAluno = '''
-    CREATE TABLE turma_aluno (
-      turma_id INTEGER NOT NULL,
-      aluno_id INTEGER NOT NULL,
-      PRIMARY KEY (turma_id, aluno_id),
-      FOREIGN KEY (turma_id) REFERENCES turma(id),
-      FOREIGN KEY (aluno_id) REFERENCES aluno(id)
-    )
-  ''';
-
   final String _inserirTurma = '''
-    INSERT INTO turma (nome, horario)
-    VALUES (?, ?)
+    INSERT INTO turma (nome, horario_inicio, horario_fim, dia_semana)
+    VALUES (?, ?, ?, ?)
   ''';
 
   final String _atualizarTurma = '''
     UPDATE turma
-    SET nome = ?, horario = ?
+    SET nome = ?, horario_inicio = ?, horario_fim = ?, dia_semana = ?
     WHERE id = ?
   ''';
 
@@ -68,11 +40,11 @@ class DAOTurma {
   ''';
 
   final String _consultarTodos = '''
-    SELECT t.id, t.nome, t.horario,
-           GROUP_CONCAT(tp.professor_id) as professores_ids,
-           GROUP_CONCAT(p.nome) as professores_nomes,
-           GROUP_CONCAT(ta.aluno_id) as alunos_ids,
-           GROUP_CONCAT(a.nome) as alunos_nomes
+    SELECT t.id, t.nome, t.horario_inicio, t.horario_fim, t.dia_semana,
+           GROUP_CONCAT(DISTINCT tp.professor_id) as professores_ids,
+           GROUP_CONCAT(DISTINCT p.nome) as professores_nomes,
+           GROUP_CONCAT(DISTINCT ta.aluno_id) as alunos_ids,
+           GROUP_CONCAT(DISTINCT a.nome) as alunos_nomes
     FROM turma t
     LEFT JOIN turma_professor tp ON t.id = tp.turma_id
     LEFT JOIN professor p ON tp.professor_id = p.id
@@ -82,11 +54,11 @@ class DAOTurma {
   ''';
 
   final String _consultarPorId = '''
-    SELECT t.id, t.nome, t.horario,
-           GROUP_CONCAT(tp.professor_id) as professores_ids,
-           GROUP_CONCAT(p.nome) as professores_nomes,
-           GROUP_CONCAT(ta.aluno_id) as alunos_ids,
-           GROUP_CONCAT(a.nome) as alunos_nomes
+    SELECT t.id, t.nome, t.horario_inicio, t.horario_fim, t.dia_semana,
+           GROUP_CONCAT(DISTINCT tp.professor_id) as professores_ids,
+           GROUP_CONCAT(DISTINCT p.nome) as professores_nomes,
+           GROUP_CONCAT(DISTINCT ta.aluno_id) as alunos_ids,
+           GROUP_CONCAT(DISTINCT a.nome) as alunos_nomes
     FROM turma t
     LEFT JOIN turma_professor tp ON t.id = tp.turma_id
     LEFT JOIN professor p ON tp.professor_id = p.id
@@ -96,11 +68,27 @@ class DAOTurma {
     GROUP BY t.id
   ''';
 
+  final String _verificarConflitoProfessor = '''
+    SELECT t.id, t.nome
+    FROM turma t
+    JOIN turma_professor tp ON t.id = tp.turma_id
+    WHERE tp.professor_id = ? 
+      AND t.dia_semana = ?
+      AND (
+        (t.horario_inicio <= ? AND t.horario_fim > ?)
+        OR (t.horario_inicio < ? AND t.horario_fim >= ?)
+        OR (? <= t.horario_inicio AND ? >= t.horario_fim)
+      )
+      AND t.id != ?
+  ''';
+
   Map<String, dynamic> toMap(TurmaDTO turma) {
     return {
       'id': turma.id,
       'nome': turma.nome,
-      'horario': turma.horario,
+      'horario_inicio': turma.horarioInicio,
+      'horario_fim': turma.horarioFim,
+      'dia_semana': turma.diaSemana,
       'professores_ids': turma.professoresIds,
       'professores_nomes': turma.professoresNomes,
       'alunos_ids': turma.alunosIds,
@@ -125,7 +113,9 @@ class DAOTurma {
     return TurmaDTO(
       id: map['id']?.toString(),
       nome: map['nome'],
-      horario: map['horario'],
+      horarioInicio: map['horario_inicio'],
+      horarioFim: map['horario_fim'],
+      diaSemana: map['dia_semana'],
       professoresIds: professoresIds,
       professoresNomes: professoresNomes,
       alunosIds: alunosIds,
@@ -133,62 +123,128 @@ class DAOTurma {
     );
   }
 
+  Future<String?> verificarConflitoProfessor(int professorId,
+      String horarioInicio, String horarioFim, String diaSemana,
+      {String? turmaId}) async {
+    final Database db = await ConexaoSQLite.database;
+    final List<Map<String, dynamic>> result = await db.rawQuery(
+      _verificarConflitoProfessor,
+      [
+        professorId,
+        diaSemana,
+        horarioFim,
+        horarioInicio,
+        horarioInicio,
+        horarioFim,
+        horarioInicio,
+        horarioFim,
+        turmaId ?? -1,
+      ],
+    );
+    if (result.isNotEmpty) {
+      return result.first['nome'] as String;
+    }
+    return null;
+  }
+
   Future<void> salvar(TurmaDTO turma) async {
     final Database db = await ConexaoSQLite.database;
     try {
+      for (String professorId in turma.professoresIds) {
+        final parsedId = int.tryParse(professorId);
+        if (parsedId == null) {
+          throw Exception('ID de professor inválido: $professorId');
+        }
+        final conflito = await verificarConflitoProfessor(
+          parsedId,
+          turma.horarioInicio!,
+          turma.horarioFim!,
+          turma.diaSemana!,
+          turmaId: turma.id,
+        );
+        if (conflito != null) {
+          throw Exception(
+              'Conflito de horário: Professor já está na turma $conflito no mesmo horário e dia.');
+        }
+      }
+
       await db.transaction((txn) async {
         if (turma.id == null) {
-          // Insert
           final int id = await txn.rawInsert(
             _inserirTurma,
-            [turma.nome, turma.horario],
+            [
+              turma.nome,
+              turma.horarioInicio,
+              turma.horarioFim,
+              turma.diaSemana
+            ],
           );
           turma.id = id.toString();
-
-          // Insert professors
-          for (String professorId in turma.professoresIds) {
-            await txn.rawInsert(
-              _inserirTurmaProfessor,
-              [id, int.parse(professorId)],
-            );
+          if (turma.professoresIds.isNotEmpty) {
+            for (String professorId in turma.professoresIds) {
+              final parsedId = int.tryParse(professorId);
+              if (parsedId == null) {
+                throw Exception('ID de professor inválido: $professorId');
+              }
+              await txn.rawInsert(
+                _inserirTurmaProfessor,
+                [id, parsedId],
+              );
+            }
           }
-
-          // Insert students
-          for (String alunoId in turma.alunosIds) {
-            await txn.rawInsert(
-              _inserirTurmaAluno,
-              [id, int.parse(alunoId)],
-            );
+          if (turma.alunosIds.isNotEmpty) {
+            for (String alunoId in turma.alunosIds) {
+              final parsedId = int.tryParse(alunoId);
+              if (parsedId == null) {
+                throw Exception('ID de aluno inválido: $alunoId');
+              }
+              await txn.rawInsert(
+                _inserirTurmaAluno,
+                [id, parsedId],
+              );
+            }
           }
         } else {
-          // Update
           await txn.rawUpdate(
             _atualizarTurma,
-            [turma.nome, turma.horario, int.parse(turma.id!)],
+            [
+              turma.nome,
+              turma.horarioInicio,
+              turma.horarioFim,
+              turma.diaSemana,
+              int.parse(turma.id!)
+            ],
           );
-
-          // Delete existing associations
           await txn.rawDelete(_deletarTurmaProfessores, [int.parse(turma.id!)]);
           await txn.rawDelete(_deletarTurmaAlunos, [int.parse(turma.id!)]);
-
-          // Insert updated professors
-          for (String professorId in turma.professoresIds) {
-            await txn.rawInsert(
-              _inserirTurmaProfessor,
-              [int.parse(turma.id!), int.parse(professorId)],
-            );
+          if (turma.professoresIds.isNotEmpty) {
+            for (String professorId in turma.professoresIds) {
+              final parsedId = int.tryParse(professorId);
+              if (parsedId == null) {
+                throw Exception('ID de professor inválido: $professorId');
+              }
+              await txn.rawInsert(
+                _inserirTurmaProfessor,
+                [int.parse(turma.id!), parsedId],
+              );
+            }
           }
-
-          // Insert updated students
-          for (String alunoId in turma.alunosIds) {
-            await txn.rawInsert(
-              _inserirTurmaAluno,
-              [int.parse(turma.id!), int.parse(alunoId)],
-            );
+          if (turma.alunosIds.isNotEmpty) {
+            for (String alunoId in turma.alunosIds) {
+              final parsedId = int.tryParse(alunoId);
+              if (parsedId == null) {
+                throw Exception('ID de aluno inválido: $alunoId');
+              }
+              await txn.rawInsert(
+                _inserirTurmaAluno,
+                [int.parse(turma.id!), parsedId],
+              );
+            }
           }
         }
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Erro ao salvar turma: $e, stack: $stackTrace');
       throw Exception('Erro ao salvar turma: $e');
     }
   }
@@ -196,10 +252,13 @@ class DAOTurma {
   Future<List<TurmaDTO>> consultarTodos() async {
     final Database db = await ConexaoSQLite.database;
     try {
+      print('Executando consulta de turmas');
       final List<Map<String, dynamic>> maps =
           await db.rawQuery(_consultarTodos);
+      print('Resultados da consulta: $maps');
       return maps.map((map) => fromMap(map)).toList();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Erro ao consultar turmas: $e, stack: $stackTrace');
       throw Exception('Erro ao consultar turmas: $e');
     }
   }
@@ -207,11 +266,14 @@ class DAOTurma {
   Future<TurmaDTO?> consultarPorId(int id) async {
     final Database db = await ConexaoSQLite.database;
     try {
+      print('Consultando turma por ID: $id');
       final List<Map<String, dynamic>> maps =
           await db.rawQuery(_consultarPorId, [id]);
+      print('Resultado da consulta: $maps');
       if (maps.isEmpty) return null;
       return fromMap(maps.first);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Erro ao consultar turma por ID: $e, stack: $stackTrace');
       throw Exception('Erro ao consultar turma por ID: $e');
     }
   }
@@ -219,12 +281,14 @@ class DAOTurma {
   Future<void> excluir(int id) async {
     final Database db = await ConexaoSQLite.database;
     try {
+      print('Excluindo turma: $id');
       await db.transaction((txn) async {
         await txn.rawDelete(_deletarTurmaProfessores, [id]);
         await txn.rawDelete(_deletarTurmaAlunos, [id]);
         await txn.rawDelete(_deletarTurma, [id]);
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Erro ao excluir turma: $e, stack: $stackTrace');
       throw Exception('Erro ao excluir turma: $e');
     }
   }

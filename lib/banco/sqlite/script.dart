@@ -139,128 +139,104 @@ class ScriptSQLite {
     )
   ''';
 
-  static const List<String> comandosCriarTabelas = [
-    _criarTabelaAcademia,
-    _criarTabelaEquipamento,
-    _criarTabelaObjetivo,
-    _criarTabelaExercicio,
-    _criarTabelaExercicioEquipamento,
-    _criarTabelaTreino,
-    _criarTabelaTreinoExercicio,
-    _criarTabelaAluno,
-    _criarTabelaAlunoObjetivo,
-    _criarTabelaModalidade,
-    _criarTabelaProfessor,
-    _criarTabelaProfessorModalidade,
-    _criarTabelaDieta,
-    _criarTabelaReceita,
-    _criarTabelaReceitaDieta,
-  ];
+  static const String _criarTabelaTurma = '''
+    CREATE TABLE turma (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      horario_inicio TEXT NOT NULL,
+      horario_fim TEXT NOT NULL,
+      dia_semana TEXT NOT NULL
+    )
+  ''';
+
+  static const String _criarTabelaTurmaAluno = '''
+    CREATE TABLE turma_aluno (
+      turma_id INTEGER NOT NULL,
+      aluno_id INTEGER NOT NULL,
+      PRIMARY KEY (turma_id, aluno_id),
+      FOREIGN KEY (turma_id) REFERENCES turma(id),
+      FOREIGN KEY (aluno_id) REFERENCES aluno(id)
+    )
+  ''';
+
+  static const String _criarTabelaTurmaProfessor = '''
+    CREATE TABLE turma_professor (
+      turma_id INTEGER NOT NULL,
+      professor_id INTEGER NOT NULL,
+      PRIMARY KEY (turma_id, professor_id),
+      FOREIGN KEY (turma_id) REFERENCES turma(id),
+      FOREIGN KEY (professor_id) REFERENCES professor(id)
+    )
+  ''';
 
   static const List<String> _insercoesAcademia = [
-    "INSERT INTO academia (nome, endereco, telefone_contato, cidade, ativo) VALUES ('FitLife', 'Rua Principal, 123', '(44) 99999-1234', 'Paranavaí', 1)",
-    "INSERT INTO academia (nome, endereco, telefone_contato, cidade, ativo) VALUES ('PowerGym', 'Av. Central, 456', '(44) 98888-5678', 'Maringá', 1)",
-    "INSERT INTO academia (nome, endereco, telefone_contato, cidade, ativo) VALUES ('Vida Saudável', 'Rua das Flores, 789', '(44) 97777-9012', 'Cianorte', 0)",
+    "INSERT INTO academia (nome, endereco, telefone_contato, cidade, ativo) VALUES ('Academia Fit', 'Rua das Flores, 123', '44999999999', 'Cascavel', 1)",
+    "INSERT INTO academia (nome, endereco, telefone_contato, cidade, ativo) VALUES ('Academia Power', 'Avenida Brasil, 456', '44988888888', 'Toledo', 1)",
   ];
 
   static const List<String> _insercoesEquipamento = [
-    "INSERT INTO equipamento (nome) VALUES ('Halteres')",
-    "INSERT INTO equipamento (nome) VALUES ('Barra Olímpica')",
-    "INSERT INTO equipamento (nome) VALUES ('Máquina de Smith')",
-    "INSERT INTO equipamento (nome) VALUES ('Cabo de Aço')",
-    "INSERT INTO equipamento (nome) VALUES ('Banco Ajustável')",
-    "INSERT INTO equipamento (nome) VALUES ('Kettlebell')",
-    "INSERT INTO equipamento (nome) VALUES ('Leg Press')",
     "INSERT INTO equipamento (nome) VALUES ('Esteira')",
+    "INSERT INTO equipamento (nome) VALUES ('Bicicleta Ergométrica')",
+    "INSERT INTO equipamento (nome) VALUES ('Halteres')",
   ];
 
   static const List<String> _insercoesObjetivo = [
-    "INSERT INTO objetivo (nome) VALUES ('Perder peso')",
-    "INSERT INTO objetivo (nome) VALUES ('Ganhar massa muscular')",
-    "INSERT INTO objetivo (nome) VALUES ('Melhorar condicionamento físico')",
-    "INSERT INTO objetivo (nome) VALUES ('Aumentar flexibilidade')",
-    "INSERT INTO objetivo (nome) VALUES ('Reduzir estresse')",
+    "INSERT INTO objetivo (nome) VALUES ('Ganho de Massa Muscular')",
+    "INSERT INTO objetivo (nome) VALUES ('Perda de Peso')",
+    "INSERT INTO objetivo (nome) VALUES ('Manutenção da Saúde')",
   ];
 
   static const List<String> _insercoesExercicio = [
     "INSERT INTO exercicio (nome) VALUES ('Supino Reto')",
     "INSERT INTO exercicio (nome) VALUES ('Agachamento Livre')",
-    "INSERT INTO exercicio (nome) VALUES ('Rosca Direta')",
-    "INSERT INTO exercicio (nome) VALUES ('Leg Press 45°')",
-    "INSERT INTO exercicio (nome) VALUES ('Puxada na Polia')",
+    "INSERT INTO exercicio (nome) VALUES ('Corrida na Esteira')",
   ];
 
   static const List<String> _insercoesExercicioEquipamento = [
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (1, 5)", // Supino Reto: Banco Ajustável
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (1, 1)", // Supino Reto: Halteres
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (2, 2)", // Agachamento Livre: Barra Olímpica
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (3, 1)", // Rosca Direta: Halteres
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (3, 6)", // Rosca Direta: Kettlebell
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (4, 7)", // Leg Press 45°: Leg Press
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (5, 4)", // Puxada na Polia: Cabo de Aço
-    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (5, 1)", // Puxada na Polia: Halteres
+    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (1, 3)", // Supino Reto - Halteres
+    "INSERT INTO exercicio_equipamento (exercicio_id, equipamento_id) VALUES (3, 1)", // Corrida na Esteira - Esteira
   ];
 
   static const List<String> _insercoesTreino = [
-    "INSERT INTO treino (nome) VALUES ('Treino de Peito')",
-    "INSERT INTO treino (nome) VALUES ('Treino de Pernas')",
-    "INSERT INTO treino (nome) VALUES ('Treino de Braços')",
-    "INSERT INTO treino (nome) VALUES ('Treino Full Body')",
-    "INSERT INTO treino (nome) VALUES ('Treino de Costas')",
+    "INSERT INTO treino (nome) VALUES ('Treino de Força')",
+    "INSERT INTO treino (nome) VALUES ('Treino Cardio')",
   ];
 
   static const List<String> _insercoesTreinoExercicio = [
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (1, 1)",
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (2, 2)",
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (2, 4)",
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (3, 3)",
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (4, 1)",
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (4, 2)",
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (4, 3)",
-    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (5, 5)",
+    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (1, 1)", // Treino de Força - Supino Reto
+    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (1, 2)", // Treino de Força - Agachamento Livre
+    "INSERT INTO treino_exercicio (treino_id, exercicio_id) VALUES (2, 3)", // Treino Cardio - Corrida na Esteira
   ];
 
   static const List<String> _insercoesAluno = [
-    "INSERT INTO aluno (nome, telefone, objetivo_principal_id) VALUES ('João Silva', '(44) 99999-1111', 1)", // Objetivo: Perder peso
-    "INSERT INTO aluno (nome, telefone, objetivo_principal_id) VALUES ('Maria Oliveira', '(44) 99999-2222', 2)", // Objetivo: Ganhar massa muscular
-    "INSERT INTO aluno (nome, telefone, objetivo_principal_id) VALUES ('Carlos Santos', '(44) 99999-3333', 3)", // Objetivo: Melhorar condicionamento físico
+    "INSERT INTO aluno (nome, telefone, objetivo_principal_id) VALUES ('João Silva', '44997777777', 1)",
+    "INSERT INTO aluno (nome, telefone, objetivo_principal_id) VALUES ('Maria Oliveira', '44996666666', 2)",
   ];
 
   static const List<String> _insercoesAlunoObjetivo = [
-    "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (1, 2)", // João Silva: Ganhar massa muscular
-    "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (1, 3)", // João Silva: Melhorar condicionamento físico
-    "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (2, 1)", // Maria Oliveira: Perder peso
-    "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (2, 4)", // Maria Oliveira: Aumentar flexibilidade
-    "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (3, 5)", // Carlos Santos: Reduzir estresse
+    "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (1, 1)", // João - Ganho de Massa
+    "INSERT INTO aluno_objetivo (aluno_id, objetivo_id) VALUES (2, 2)", // Maria - Perda de Peso
   ];
 
   static const List<String> _insercoesModalidade = [
-    "INSERT INTO modalidade (id, nome) VALUES ('1', 'Musculação')",
-    "INSERT INTO modalidade (id, nome) VALUES ('2', 'Yoga')",
-    "INSERT INTO modalidade (id, nome) VALUES ('3', 'Pilates')",
-    "INSERT INTO modalidade (id, nome) VALUES ('4', 'Treinamento Funcional')",
-    "INSERT INTO modalidade (id, nome) VALUES ('5', 'Spinning')",
+    "INSERT INTO modalidade (id, nome) VALUES ('MUSC', 'Musculação')",
+    "INSERT INTO modalidade (id, nome) VALUES ('CARD', 'Cardio')",
   ];
 
   static const List<String> _insercoesProfessor = [
-    "INSERT INTO professor (nome, telefone) VALUES ('João Silva', '(11) 98765-4321')",
-    "INSERT INTO professor (nome, telefone) VALUES ('Maria Oliveira', '(21) 97654-3210')",
-    "INSERT INTO professor (nome, telefone) VALUES ('Pedro Santos', '(31) 96543-2109')",
+    "INSERT INTO professor (nome, telefone) VALUES ('Carlos Souza', '44995555555')",
+    "INSERT INTO professor (nome, telefone) VALUES ('Ana Pereira', '44994444444')",
   ];
 
   static const List<String> _insercoesProfessorModalidade = [
-    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (1, '1')", // João Silva: Musculação
-    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (1, '2')", // João Silva: Yoga
-    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (2, '3')", // Maria Oliveira: Pilates
-    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (2, '4')", // Maria Oliveira: Treinamento Funcional
-    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (3, '1')", // Pedro Santos: Musculação
-    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (3, '5')", // Pedro Santos: Spinning
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (1, 'MUSC')",
+    "INSERT INTO professor_modalidade (professor_id, modalidade_id) VALUES (2, 'CARD')",
   ];
 
   static const List<String> _insercoesDieta = [
-    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Ganho de Massa', 'Plano alimentar para aumento de massa muscular', 'Ganhar massa muscular')",
-    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Perda de Peso', 'Plano alimentar para redução de gordura corporal', 'Perder peso')",
-    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Manutenção', 'Plano alimentar para manter peso e saúde', 'Melhorar condicionamento físico')",
+    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Ganho de Massa', 'Alta em proteínas e carboidratos', 'Ganho Muscular')",
+    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Perda de Peso', 'Baixa em calorias', 'Emagrecimento')",
+    "INSERT INTO dieta (nome, descricao, objetivo) VALUES ('Dieta de Manutenção', 'Balanceada', 'Manutenção')",
   ];
 
   static const List<String> _insercoesReceita = [
@@ -280,6 +256,42 @@ class ScriptSQLite {
     "INSERT INTO receita_dieta (receita_id, dieta_id) VALUES (3, 3)", // Salada de Quinoa: Dieta de Manutenção (exemplo de múltiplas dietas)
   ];
 
+  static const List<String> _insercoesTurma = [
+    "INSERT INTO turma (nome, horario_inicio, horario_fim, dia_semana) VALUES ('Turma A', '08:00', '09:00', 'Segunda')",
+    "INSERT INTO turma (nome, horario_inicio, horario_fim, dia_semana) VALUES ('Turma B', '09:00', '10:00', 'Terça')",
+  ];
+
+  static const List<String> _insercoesTurmaProfessor = [
+    "INSERT INTO turma_professor (turma_id, professor_id) VALUES (1, 1)",
+    "INSERT INTO turma_professor (turma_id, professor_id) VALUES (2, 2)",
+  ];
+
+  static const List<String> _insercoesTurmaAluno = [
+    "INSERT INTO turma_aluno (turma_id, aluno_id) VALUES (1, 1)",
+    "INSERT INTO turma_aluno (turma_id, aluno_id) VALUES (2, 2)",
+  ];
+
+  static const List<String> comandosCriarTabelas = [
+    _criarTabelaAcademia,
+    _criarTabelaEquipamento,
+    _criarTabelaObjetivo,
+    _criarTabelaExercicio,
+    _criarTabelaExercicioEquipamento,
+    _criarTabelaTreino,
+    _criarTabelaTreinoExercicio,
+    _criarTabelaAluno,
+    _criarTabelaAlunoObjetivo,
+    _criarTabelaModalidade,
+    _criarTabelaProfessor,
+    _criarTabelaProfessorModalidade,
+    _criarTabelaDieta,
+    _criarTabelaReceita,
+    _criarTabelaReceitaDieta,
+    _criarTabelaTurma,
+    _criarTabelaTurmaAluno,
+    _criarTabelaTurmaProfessor,
+  ];
+
   static const List<List<String>> comandosInsercoes = [
     _insercoesAcademia,
     _insercoesEquipamento,
@@ -296,6 +308,9 @@ class ScriptSQLite {
     _insercoesDieta,
     _insercoesReceita,
     _insercoesReceitaDieta,
+    _insercoesTurma,
+    _insercoesTurmaProfessor,
+    _insercoesTurmaAluno,
   ];
 
   Future<void> criarTabelas(Database db) async {

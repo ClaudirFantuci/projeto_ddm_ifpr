@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_professor.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_turma.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_modalidades.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_equipamentos.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_equipamentos.dart';
@@ -8,6 +9,8 @@ import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_academias.dart'
     hide Scaffold;
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_alunos.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_modalidades.dart';
+import 'package:projeto_ddm_ifpr/widget/widget_cadastro_turmas.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_turmas.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_menu.dart';
 import 'package:projeto_ddm_ifpr/configuracao/rotas.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_academias.dart';
@@ -84,6 +87,10 @@ class Aplicativo extends StatelessWidget {
             return MaterialPageRoute(
                 builder: (_) =>
                     WidgetCadastroProfessores(professor: professor));
+          case Rotas.cadastroTurmas:
+            final turma = settings.arguments as TurmaDTO?;
+            return MaterialPageRoute(
+                builder: (_) => WidgetCadastroTurmas(turma: turma));
           case Rotas.cadastroDietas:
             final dieta = settings.arguments as DietaDTO?;
             return MaterialPageRoute(
@@ -112,10 +119,13 @@ class Aplicativo extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ListaModalidade());
           case Rotas.listaProfessores:
             return MaterialPageRoute(builder: (_) => const ListaProfessor());
+          case Rotas.listaTurmas:
+            return MaterialPageRoute(builder: (_) => const WidgetListaTurmas());
           case Rotas.listaDietas:
             return MaterialPageRoute(builder: (_) => const WidgetListaDietas());
           case Rotas.listaReceitas:
-            return MaterialPageRoute(builder: (_) => const WidgetListaReceitas());
+            return MaterialPageRoute(
+                builder: (_) => const WidgetListaReceitas());
           case Rotas.agendamento:
             return MaterialPageRoute(builder: (_) => const WidgetAgendamento());
           case Rotas.listas:
