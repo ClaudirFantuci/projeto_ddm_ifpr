@@ -22,14 +22,14 @@ class DAOModalidade {
 
   Map<String, dynamic> toMap(DtoModalidade dto) {
     return {
-      'id': dto.id,
+      'id': dto.id != null ? int.tryParse(dto.id!) : null,
       'nome': dto.nome,
     };
   }
 
   DtoModalidade fromMap(Map<String, dynamic> map) {
     return DtoModalidade(
-      id: map['id'] as String?,
+      id: map['id']?.toString(),
       nome: map['nome'] as String,
     );
   }
@@ -39,7 +39,7 @@ class DAOModalidade {
     try {
       await db.rawInsert(
         _sqlSalvarModalidade,
-        [dto.id, dto.nome],
+        [dto.id != null ? int.tryParse(dto.id!) : null, dto.nome],
       );
     } catch (e) {
       throw Exception('Erro ao salvar modalidade: $e');
@@ -61,7 +61,7 @@ class DAOModalidade {
     final db = await ConexaoSQLite.database;
     try {
       final List<Map<String, dynamic>> maps =
-          await db.rawQuery(_sqlConsultarPorId, [id]);
+          await db.rawQuery(_sqlConsultarPorId, [int.parse(id)]);
       if (maps.isNotEmpty) {
         return fromMap(maps.first);
       }
@@ -74,7 +74,7 @@ class DAOModalidade {
   Future<void> excluir(String id) async {
     final db = await ConexaoSQLite.database;
     try {
-      await db.rawDelete(_sqlExcluirModalidade, [id]);
+      await db.rawDelete(_sqlExcluirModalidade, [int.parse(id)]);
     } catch (e) {
       throw Exception('Erro ao excluir modalidade: $e');
     }

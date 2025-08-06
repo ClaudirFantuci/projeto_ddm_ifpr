@@ -96,11 +96,10 @@ class _WidgetCadastroProfessoresState extends State<WidgetCadastroProfessores> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         }
       } catch (e) {
         if (mounted) {
-          print('Erro ao salvar professor: $e');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Erro ao salvar professor: $e'),
@@ -150,7 +149,7 @@ class _WidgetCadastroProfessoresState extends State<WidgetCadastroProfessores> {
                 style: const TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'O nome do professor é obrigatório';
+                    return 'O nome é obrigatório';
                   }
                   return null;
                 },
@@ -158,8 +157,6 @@ class _WidgetCadastroProfessoresState extends State<WidgetCadastroProfessores> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _telefoneController,
-                inputFormatters: [_telefoneMask],
-                keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
                   labelText: 'Telefone',
                   hintText: 'Insira o telefone (ex.: (44) 99999-1234)',
@@ -173,6 +170,7 @@ class _WidgetCadastroProfessoresState extends State<WidgetCadastroProfessores> {
                   ),
                 ),
                 style: const TextStyle(color: Colors.white),
+                inputFormatters: [_telefoneMask],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'O telefone é obrigatório';

@@ -14,10 +14,10 @@ class DAOProfessor {
   final String _criarTabelaProfessorModalidade = '''
     CREATE TABLE professor_modalidade (
       professor_id INTEGER NOT NULL,
-      modalidade_id TEXT NOT NULL,
+      modalidade_id INTEGER NOT NULL,
       PRIMARY KEY (professor_id, modalidade_id),
-      FOREIGN KEY (professor_id) REFERENCES professor(id),
-      FOREIGN KEY (modalidade_id) REFERENCES modalidade(id)
+      FOREIGN KEY (professor_id) REFERENCES professor(id) ON DELETE CASCADE,
+      FOREIGN KEY (modalidade_id) REFERENCES modalidade(id) ON DELETE CASCADE
     )
   ''';
 
@@ -80,12 +80,11 @@ class DAOProfessor {
 
   ProfessorDTO fromMap(Map<String, dynamic> map) {
     final List<String> modalidadesIds = map['modalidades_ids'] != null
-        ? (map['modalidades_ids'] as String).split(',')
+        ? (map['modalidades_ids'] as String).split(',').map((id) => id).toList()
         : [];
     final List<String>? modalidadesNomes = map['modalidades_nomes'] != null
         ? (map['modalidades_nomes'] as String).split(',')
         : null;
-
     return ProfessorDTO(
       id: map['id']?.toString(),
       nome: map['nome'],
@@ -111,7 +110,7 @@ class DAOProfessor {
           for (String modalidadeId in professor.ModalidadesIds) {
             await txn.rawInsert(
               _inserirProfessorModalidade,
-              [id, modalidadeId],
+              [id, int.parse(modalidadeId)],
             );
           }
         } else {
@@ -129,7 +128,7 @@ class DAOProfessor {
           for (String modalidadeId in professor.ModalidadesIds) {
             await txn.rawInsert(
               _inserirProfessorModalidade,
-              [int.parse(professor.id!), modalidadeId],
+              [int.parse(professor.id!), int.parse(modalidadeId)],
             );
           }
         }

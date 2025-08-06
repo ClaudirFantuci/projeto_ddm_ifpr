@@ -49,7 +49,7 @@ class _WidgetCadastroModalidadesState extends State<WidgetCadastroModalidades> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context, true); // Retorna true para indicar sucesso
+          Navigator.pop(context, true);
         }
       } catch (e) {
         if (mounted) {

@@ -6,13 +6,13 @@ import 'dart:convert';
 
 class DAOReceitas {
   final String _inserirReceita = '''
-    INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional, dieta_id)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO receita (nome, ingredientes, modo_preparo, valor_nutricional)
+    VALUES (?, ?, ?, ?)
   ''';
 
   final String _atualizarReceita = '''
     UPDATE receita
-    SET nome = ?, ingredientes = ?, modo_preparo = ?, valor_nutricional = ?, dieta_id = ?
+    SET nome = ?, ingredientes = ?, modo_preparo = ?, valor_nutricional = ?
     WHERE id = ?
   ''';
 
@@ -32,7 +32,7 @@ class DAOReceitas {
   ''';
 
   final String _consultarTodos = '''
-    SELECT r.id, r.nome, r.ingredientes, r.modo_preparo, r.valor_nutricional, r.dieta_id,
+    SELECT r.id, r.nome, r.ingredientes, r.modo_preparo, r.valor_nutricional,
            GROUP_CONCAT(rd.dieta_id) as dietas_ids,
            GROUP_CONCAT(COALESCE(d.nome, '')) as dietas_nomes
     FROM receita r
@@ -42,7 +42,7 @@ class DAOReceitas {
   ''';
 
   final String _consultarPorId = '''
-    SELECT r.id, r.nome, r.ingredientes, r.modo_preparo, r.valor_nutricional, r.dieta_id,
+    SELECT r.id, r.nome, r.ingredientes, r.modo_preparo, r.valor_nutricional,
            GROUP_CONCAT(rd.dieta_id) as dietas_ids,
            GROUP_CONCAT(COALESCE(d.nome, '')) as dietas_nomes
     FROM receita r
@@ -61,42 +61,35 @@ class DAOReceitas {
       'valor_nutricional': receita.valorNutricional != null
           ? jsonEncode(receita.valorNutricional)
           : null,
-      'dieta_id': receita.dietaId,
-      'dietas_nomes': receita.dietasNomes?.join(','),
+      'dietas_ids': receita.dietasIds,
+      'dietas_nomes': receita.dietasNomes,
     };
   }
 
   ReceitaDTO fromMap(Map<String, dynamic> map) {
-    try {
-      final List<String>? dietasIds = map['dietas_ids'] != null
-          ? (map['dietas_ids'] as String).split(',')
-          : null;
-      final List<String>? dietasNomes = map['dietas_nomes'] != null
-          ? (map['dietas_nomes'] as String).split(',')
-          : null;
-
-      return ReceitaDTO(
-        id: map['id']?.toString(),
-        nome: map['nome'] as String? ?? 'Nome desconhecido',
-        ingredientes: map['ingredientes'] != null
-            ? List<String>.from(jsonDecode(map['ingredientes'] as String))
-            : [],
-        modoPreparo: map['modo_preparo'] as String?,
-        valorNutricional: map['valor_nutricional'] != null
-            ? Map<String, double>.from(
-                jsonDecode(map['valor_nutricional'] as String).map(
-                  (key, value) =>
-                      MapEntry(key, value is int ? value.toDouble() : value),
-                ),
-              )
-            : null,
-        dietaId: map['dieta_id']?.toString(),
-        dietasNomes: dietasNomes,
-      );
-    } catch (e) {
-      debugPrint('Erro ao parsear mapa para ReceitaDTO: $e');
-      throw Exception('Erro ao parsear receita: $e');
-    }
+    final ingredientesJson = map['ingredientes'];
+    final valorNutricionalJson = map['valor_nutricional'];
+    return ReceitaDTO(
+      id: map['id']?.toString(),
+      nome: map['nome'],
+      ingredientes: ingredientesJson != null
+          ? List<String>.from(jsonDecode(ingredientesJson))
+          : [],
+      modoPreparo: map['modo_preparo'],
+      valorNutricional: valorNutricionalJson != null
+          ? Map<String, double>.from(jsonDecode(valorNutricionalJson)
+              .map((k, v) => MapEntry(k, v.toDouble())))
+          : null,
+      dietasIds: map['dietas_ids'] != null
+          ? (map['dietas_ids'] as String).split(',').map((id) => id).toList()
+          : [],
+      dietasNomes: map['dietas_nomes'] != null
+          ? (map['dietas_nomes'] as String)
+              .split(',')
+              .where((nome) => nome.isNotEmpty)
+              .toList()
+          : null,
+    );
   }
 
   Future<ReceitaDTO> salvar(ReceitaDTO receita) async {
@@ -104,7 +97,6 @@ class DAOReceitas {
     try {
       await db.transaction((txn) async {
         if (receita.id == null) {
-          // Inserção
           final int id = await txn.rawInsert(
             _inserirReceita,
             [
@@ -114,27 +106,21 @@ class DAOReceitas {
               receita.valorNutricional != null
                   ? jsonEncode(receita.valorNutricional)
                   : null,
-              receita.dietaId != null ? int.tryParse(receita.dietaId!) : null,
             ],
           );
           receita.id = id.toString();
-
-          // Inserir associações com dietas
-          if (receita.dietasNomes != null) {
-            for (String dietaId in receita.dietasNomes!) {
-              final parsedDietaId = int.tryParse(dietaId);
-              if (parsedDietaId != null) {
-                await txn.rawInsert(
-                  _inserirReceitaDieta,
-                  [id, parsedDietaId],
-                );
-              } else {
-                debugPrint('ID de dieta inválido ignorado: $dietaId');
-              }
+          for (String dietaId in receita.dietasIds) {
+            final parsedDietaId = int.tryParse(dietaId);
+            if (parsedDietaId != null) {
+              await txn.rawInsert(
+                _inserirReceitaDieta,
+                [id, parsedDietaId],
+              );
+            } else {
+              debugPrint('ID de dieta inválido ignorado: $dietaId');
             }
           }
         } else {
-          // Atualização
           await txn.rawUpdate(
             _atualizarReceita,
             [
@@ -144,26 +130,19 @@ class DAOReceitas {
               receita.valorNutricional != null
                   ? jsonEncode(receita.valorNutricional)
                   : null,
-              receita.dietaId != null ? int.tryParse(receita.dietaId!) : null,
               int.parse(receita.id!),
             ],
           );
-
-          // Deletar associações existentes
           await txn.rawDelete(_deletarReceitaDietas, [int.parse(receita.id!)]);
-
-          // Inserir novas associações
-          if (receita.dietasNomes != null) {
-            for (String dietaId in receita.dietasNomes!) {
-              final parsedDietaId = int.tryParse(dietaId);
-              if (parsedDietaId != null) {
-                await txn.rawInsert(
-                  _inserirReceitaDieta,
-                  [int.parse(receita.id!), parsedDietaId],
-                );
-              } else {
-                debugPrint('ID de dieta inválido ignorado: $dietaId');
-              }
+          for (String dietaId in receita.dietasIds) {
+            final parsedDietaId = int.tryParse(dietaId);
+            if (parsedDietaId != null) {
+              await txn.rawInsert(
+                _inserirReceitaDieta,
+                [int.parse(receita.id!), parsedDietaId],
+              );
+            } else {
+              debugPrint('ID de dieta inválido ignorado: $dietaId');
             }
           }
         }

@@ -107,7 +107,7 @@ class _ListaProfessorState extends State<ListaProfessor> {
       appBar: AppBar(
         backgroundColor: Colors.amber,
         title: const Text(
-          'Lista de Professores',
+          'Professores',
           style: TextStyle(color: Colors.black),
         ),
         iconTheme: const IconThemeData(color: Colors.black),

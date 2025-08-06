@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:projeto_ddm_ifpr/banco/sqlite/conexao.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_dieta.dart';
-import 'package:projeto_ddm_ifpr/dto/dto_receita.dart';
 
 class DAODieta {
   final String _criarTabelaDieta = '''
@@ -63,36 +62,31 @@ class DAODieta {
 
   Map<String, dynamic> toMap(DietaDTO dieta) {
     return {
-      'id': dieta.id != null ? int.tryParse(dieta.id!) : null,
+      'id': dieta.id,
       'nome': dieta.nome,
       'descricao': dieta.descricao,
       'objetivo': dieta.objetivo,
-      'receitasIds': dieta.receitasIds,
-      'receitasNomes': dieta.receitasNomes,
+      'receitas_ids': dieta.receitasIds,
+      'receitas_nomes': dieta.receitasNomes,
     };
   }
 
   DietaDTO fromMap(Map<String, dynamic> map) {
-    try {
-      final List<String> receitasIds = map['receitas_ids'] != null
-          ? (map['receitas_ids'] as String).split(',')
-          : [];
-      final List<String>? receitasNomes = map['receitas_nomes'] != null
-          ? (map['receitas_nomes'] as String).split(',')
-          : null;
-
-      return DietaDTO(
-        id: map['id']?.toString(),
-        nome: map['nome'] as String? ?? 'Nome desconhecido',
-        descricao: map['descricao'],
-        objetivo: map['objetivo'],
-        receitasIds: receitasIds,
-        receitasNomes: receitasNomes,
-      );
-    } catch (e) {
-      debugPrint('Erro ao parsear mapa para DietaDTO: $e');
-      throw Exception('Erro ao parsear dieta: $e');
-    }
+    return DietaDTO(
+      id: map['id']?.toString(),
+      nome: map['nome'],
+      descricao: map['descricao'],
+      objetivo: map['objetivo'],
+      receitasIds: map['receitas_ids'] != null
+          ? (map['receitas_ids'] as String).split(',').map((id) => id).toList()
+          : [],
+      receitasNomes: map['receitas_nomes'] != null
+          ? (map['receitas_nomes'] as String)
+              .split(',')
+              .where((nome) => nome.isNotEmpty)
+              .toList()
+          : null,
+    );
   }
 
   Future<void> salvar(DietaDTO dieta) async {
@@ -101,35 +95,28 @@ class DAODieta {
       await db.transaction((txn) async {
         int id;
         if (dieta.id == null) {
-          // Inserção
           id = await txn.rawInsert(
             _inserirDieta,
             [dieta.nome, dieta.descricao, dieta.objetivo],
           );
           dieta.id = id.toString();
         } else {
-          // Atualização
-          id = int.parse(dieta.id!);
           await txn.rawUpdate(
             _atualizarDieta,
-            [dieta.nome, dieta.descricao, dieta.objetivo, id],
+            [dieta.nome, dieta.descricao, dieta.objetivo, int.parse(dieta.id!)],
           );
-          // Deletar associações existentes
+          id = int.parse(dieta.id!);
           await txn.rawDelete(_deletarReceitaDietas, [id]);
         }
-
-        // Inserir associações com receitas
-        if (dieta.receitasIds.isNotEmpty) {
-          for (String receitaId in dieta.receitasIds) {
-            final parsedReceitaId = int.tryParse(receitaId);
-            if (parsedReceitaId != null) {
-              await txn.rawInsert(
-                _inserirReceitaDieta,
-                [parsedReceitaId, id],
-              );
-            } else {
-              debugPrint('ID de receita inválido ignorado: $receitaId');
-            }
+        for (String receitaId in dieta.receitasIds) {
+          final parsedReceitaId = int.tryParse(receitaId);
+          if (parsedReceitaId != null) {
+            await txn.rawInsert(
+              _inserirReceitaDieta,
+              [parsedReceitaId, id],
+            );
+          } else {
+            debugPrint('ID de receita inválido ignorado: $receitaId');
           }
         }
       });

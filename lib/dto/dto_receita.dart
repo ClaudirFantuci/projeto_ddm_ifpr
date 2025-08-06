@@ -4,7 +4,7 @@ class ReceitaDTO {
   List<String> ingredientes;
   String? modoPreparo;
   Map<String, double>? valorNutricional;
-  String? dietaId; 
+  List<String> dietasIds;
   List<String>? dietasNomes;
 
   ReceitaDTO({
@@ -13,7 +13,7 @@ class ReceitaDTO {
     required this.ingredientes,
     this.modoPreparo,
     this.valorNutricional,
-    this.dietaId,
+    required this.dietasIds,
     this.dietasNomes,
   });
 }
