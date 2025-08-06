@@ -90,6 +90,12 @@ class WidgetListas extends StatelessWidget {
               icon: Icons.restaurant_menu,
               route: Rotas.listaReceitas,
             ),
+            _buildGridButton(
+              context,
+              title: 'Agendamentos',
+              icon: Icons.schedule,
+              route: Rotas.agendamento,
+            ),
           ],
         ),
       ),

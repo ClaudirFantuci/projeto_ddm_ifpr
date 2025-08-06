@@ -4,7 +4,6 @@ import 'package:projeto_ddm_ifpr/dto/dto_turma.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_modalidades.dart';
 import 'package:projeto_ddm_ifpr/widget/widget_cadastro_equipamentos.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_equipamentos.dart';
-import 'package:projeto_ddm_ifpr/widget/widget_agendamento.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_academias.dart'
     hide Scaffold;
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_alunos.dart';
@@ -38,6 +37,9 @@ import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_dietas.dart';
 import 'package:projeto_ddm_ifpr/widget/listas/widget_lista_receitas.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_dieta.dart';
 import 'package:projeto_ddm_ifpr/dto/dto_receita.dart';
+import 'package:projeto_ddm_ifpr/widget/listas/lista_agendamento.dart';
+import 'package:projeto_ddm_ifpr/widget/widget_cadastro_agendamento.dart';
+import 'package:projeto_ddm_ifpr/dto/dto_agendamento.dart';
 
 class Aplicativo extends StatelessWidget {
   const Aplicativo({super.key});
@@ -99,6 +101,10 @@ class Aplicativo extends StatelessWidget {
             final receita = settings.arguments as ReceitaDTO?;
             return MaterialPageRoute(
                 builder: (_) => WidgetCadastroReceitas(receita: receita));
+          case Rotas.cadastroAgendamento:
+            final agendamento = settings.arguments as DTOAgendamento?;
+            return MaterialPageRoute(
+                builder: (_) => CadastroAgendamento(agendamento: agendamento));
           case Rotas.listaAcademias:
             return MaterialPageRoute(
                 builder: (_) => const WidgetListaAcademias());
@@ -127,7 +133,7 @@ class Aplicativo extends StatelessWidget {
             return MaterialPageRoute(
                 builder: (_) => const WidgetListaReceitas());
           case Rotas.agendamento:
-            return MaterialPageRoute(builder: (_) => const WidgetAgendamento());
+            return MaterialPageRoute(builder: (_) => const ListaAgendamento());
           case Rotas.listas:
             return MaterialPageRoute(builder: (_) => const WidgetListas());
           case Rotas.cadastros:

@@ -11,6 +11,7 @@ class Rotas {
   static const cadastroDietas = '/cadastroDietas';
   static const cadastroReceitas = '/cadastroReceitas';
   static const cadastroTurmas = '/cadastroTurmas';
+  static const cadastroAgendamento = '/cadastroAgendamento';
   static const listaAcademias = '/lista_academias';
   static const listaEquipamentos = '/listaEquipamentos';
   static const listaAlunos = '/lista_alunos';
