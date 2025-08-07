@@ -121,10 +121,10 @@ class _WidgetListaReceitasState extends State<WidgetListaReceitas> {
               child: CircularProgressIndicator(color: Colors.amber),
             );
           } else if (snapshot.hasError) {
-            print('Erro no FutureBuilder: ${snapshot.error}');
+            debugPrint('Erro no FutureBuilder: ${snapshot.error}');
             return Center(
               child: Text(
-                'Erro ao carregar receitas: ${snapshot.error}',
+                'Erro ao carregar receitas: ${snapshot.error.toString().contains('FormatException') ? 'Dados JSON inválidos no banco de dados' : snapshot.error}',
                 style: const TextStyle(color: Colors.white),
                 textAlign: TextAlign.center,
               ),
@@ -158,7 +158,7 @@ class _WidgetListaReceitasState extends State<WidgetListaReceitas> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ingredientes: ${receita.ingredientes.join(", ")}',
+                        'Ingredientes: ${receita.ingredientes.join(", ") ?? "Nenhum"}',
                         style: const TextStyle(color: Colors.white),
                       ),
                       Text(

@@ -1,22 +1,18 @@
-#Catalago de Entidades
 
-cadastros simples (5 pontos):
-agendamentos
-Objetivos
-Academias
-equipamentos
-modalidade
+# Catálogo de Complexidade -
 
+Este documento descreve a pontuação de complexidade atingida pelo projeto, com base nos critérios estabelecidos.
 
+## Tabela de Pontuação
 
-cadastros com associação 1:N (12 pontos):
-Alunos(objetivos)
-Treinos(exercicios)
-Exercícios(equipamentos)
-professor(Modalidades)
+| Descrição | Pontos Obtidos | Aplicação no projeto |
+|-----------|----------------|----------------------|
+| **4 Cadastros simples** | 4 | `Objetivos`, `Academias`, `modalidade` e `equipamentos`. |
+| **5 Cadastros com associação (1:N)** | 15 | `Alunos(objetivos)`, `Treinos(exercicios)`, `Exercícios(equipamentos)`,`professor(Modalidades)` e `agendamentos(Alunos)`. |
+| **2 Cadastros com associação (N:N)** | 12 | `turmas(alunos/modalidade)` e `dieta(dieta/receitas)`.|
 
+---
 
+###  Total: **31 pontos**
 
-cadastros associativos N:N (6 pontos):
-turmas(alunos/modalidade)
-
+---

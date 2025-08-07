@@ -69,17 +69,38 @@ class DAOReceitas {
   ReceitaDTO fromMap(Map<String, dynamic> map) {
     final ingredientesJson = map['ingredientes'];
     final valorNutricionalJson = map['valor_nutricional'];
-    return ReceitaDTO(
-      id: map['id']?.toString(),
-      nome: map['nome'],
-      ingredientes: ingredientesJson != null
+    List<String> ingredientes = [];
+    Map<String, double>? valorNutricional;
+
+    // Tratamento para ingredientes
+    try {
+      ingredientes = ingredientesJson != null
           ? List<String>.from(jsonDecode(ingredientesJson))
-          : [],
-      modoPreparo: map['modo_preparo'],
-      valorNutricional: valorNutricionalJson != null
+          : [];
+    } catch (e) {
+      debugPrint(
+          'Erro ao decodificar ingredientes para receita ${map['id']}: $e');
+      ingredientes = [];
+    }
+
+    // Tratamento para valor nutricional
+    try {
+      valorNutricional = valorNutricionalJson != null
           ? Map<String, double>.from(jsonDecode(valorNutricionalJson)
               .map((k, v) => MapEntry(k, v.toDouble())))
-          : null,
+          : null;
+    } catch (e) {
+      debugPrint(
+          'Erro ao decodificar valor_nutricional para receita ${map['id']}: $e');
+      valorNutricional = null;
+    }
+
+    return ReceitaDTO(
+      id: map['id']?.toString(),
+      nome: map['nome'] ?? 'Nome não disponível',
+      ingredientes: ingredientes,
+      modoPreparo: map['modo_preparo'],
+      valorNutricional: valorNutricional,
       dietasIds: map['dietas_ids'] != null
           ? (map['dietas_ids'] as String).split(',').map((id) => id).toList()
           : [],
@@ -191,5 +212,12 @@ class DAOReceitas {
       debugPrint('Erro ao excluir receita: $e');
       throw Exception('Erro ao excluir receita: $e');
     }
+  }
+
+  // Método para depuração
+  Future<List<Map<String, dynamic>>> consultarDadosBrutos() async {
+    final Database db = await ConexaoSQLite.database;
+    return await db.rawQuery(
+        'SELECT id, nome, ingredientes, valor_nutricional FROM receita');
   }
 }

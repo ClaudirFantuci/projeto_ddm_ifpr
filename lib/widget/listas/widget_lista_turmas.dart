@@ -144,10 +144,6 @@ class _WidgetListaTurmasState extends State<WidgetListaTurmas> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Horário: ${turma.diaSemana ?? 'Não definido'}, ${turma.horarioInicio ?? 'Não definido'}-${turma.horarioFim ?? 'Não definido'}',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      Text(
                         'Professores: ${turma.professoresNomes?.toSet().join(', ') ?? 'Nenhum'}',
                         style: const TextStyle(color: Colors.white70),
                       ),

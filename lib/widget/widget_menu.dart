@@ -15,6 +15,7 @@ class _WidgetMenuState extends State<WidgetMenu> {
   List<DTOAgendamento> _agendamentos = [];
   String _diaSelecionado = _getTodayInPortuguese();
   bool _isLoading = true;
+  Key _futureBuilderKey = UniqueKey();
 
   // Lista de dias da semana
   final List<String> _diasSemana = [
@@ -36,18 +37,28 @@ class _WidgetMenuState extends State<WidgetMenu> {
   // Carrega todos os agendamentos do banco de dados
   Future<void> _carregarAgendamentos() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final agendamentos = await _dao.consultarTodos();
-      setState(() {
-        _agendamentos = agendamentos;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _agendamentos = agendamentos;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar agendamentos: $e')),
-      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar agendamentos: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -56,6 +67,14 @@ class _WidgetMenuState extends State<WidgetMenu> {
     return _agendamentos
         .where((agendamento) => agendamento.diaSemana == dia)
         .toList();
+  }
+
+  // Atualiza a lista de agendamentos
+  void _refreshList() {
+    setState(() {
+      _futureBuilderKey = UniqueKey();
+      _carregarAgendamentos();
+    });
   }
 
   @override
@@ -178,6 +197,7 @@ class _WidgetMenuState extends State<WidgetMenu> {
                           ),
                         )
                       : ListView.builder(
+                          key: _futureBuilderKey,
                           itemCount: _filtrarAgendamentosPorDia(_diaSelecionado)
                               .length,
                           itemBuilder: (context, index) {
@@ -218,7 +238,7 @@ class _WidgetMenuState extends State<WidgetMenu> {
                                     context,
                                     Rotas.cadastroAgendamento,
                                     arguments: agendamento,
-                                  );
+                                  ).then((_) => _refreshList());
                                 },
                               ),
                             );
@@ -231,8 +251,8 @@ class _WidgetMenuState extends State<WidgetMenu> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.amber,
         foregroundColor: Colors.black,
-        onPressed: () =>
-            Navigator.pushNamed(context, Rotas.cadastroAgendamento),
+        onPressed: () => Navigator.pushNamed(context, Rotas.cadastroAgendamento)
+            .then((_) => _refreshList()),
         child: const Icon(Icons.add),
       ),
     );
@@ -256,7 +276,7 @@ class _WidgetMenuState extends State<WidgetMenu> {
       case DateTime.sunday:
         return 'Domingo';
       default:
-        return '';
+        return 'Segunda-feira';
     }
   }
 }

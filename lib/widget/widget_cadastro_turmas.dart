@@ -27,55 +27,6 @@ class _WidgetCadastroTurmasState extends State<WidgetCadastroTurmas> {
   List<AlunoDTO> _alunos = [];
   List<String> _selectedProfessoresIds = [];
   List<String> _selectedAlunosIds = [];
-  String? _selectedHorarioInicio;
-  String? _selectedHorarioFim;
-  String? _selectedDiaSemana;
-
-  static const List<String> _horariosDisponiveis = [
-    '06:00',
-    '06:30',
-    '07:00',
-    '07:30',
-    '08:00',
-    '08:30',
-    '09:00',
-    '09:30',
-    '10:00',
-    '10:30',
-    '11:00',
-    '11:30',
-    '12:00',
-    '12:30',
-    '13:00',
-    '13:30',
-    '14:00',
-    '14:30',
-    '15:00',
-    '15:30',
-    '16:00',
-    '16:30',
-    '17:00',
-    '17:30',
-    '18:00',
-    '18:30',
-    '19:00',
-    '19:30',
-    '20:00',
-    '20:30',
-    '21:00',
-    '21:30',
-    '22:00',
-  ];
-
-  static const List<String> _diasSemana = [
-    'Segunda',
-    'Terça',
-    'Quarta',
-    'Quinta',
-    'Sexta',
-    'Sábado',
-    'Domingo',
-  ];
 
   @override
   void initState() {
@@ -90,9 +41,6 @@ class _WidgetCadastroTurmasState extends State<WidgetCadastroTurmas> {
     });
     if (widget.turma != null) {
       _nomeController.text = widget.turma!.nome;
-      _selectedHorarioInicio = widget.turma!.horarioInicio;
-      _selectedHorarioFim = widget.turma!.horarioFim;
-      _selectedDiaSemana = widget.turma!.diaSemana;
       _selectedProfessoresIds = widget.turma!.professoresIds.toSet().toList();
       _selectedAlunosIds = widget.turma!.alunosIds.toSet().toList();
     }
@@ -106,37 +54,9 @@ class _WidgetCadastroTurmasState extends State<WidgetCadastroTurmas> {
 
   Future<void> _salvar() async {
     if (_formKey.currentState!.validate()) {
-      if (_selectedHorarioInicio == null ||
-          _selectedHorarioFim == null ||
-          _selectedDiaSemana == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Selecione horário de início, fim e dia da semana.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      final inicioIndex = _horariosDisponiveis.indexOf(_selectedHorarioInicio!);
-      final fimIndex = _horariosDisponiveis.indexOf(_selectedHorarioFim!);
-      if (fimIndex <= inicioIndex) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'O horário de fim deve ser posterior ao horário de início.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       final turma = TurmaDTO(
         id: widget.turma?.id,
         nome: _nomeController.text,
-        horarioInicio: _selectedHorarioInicio,
-        horarioFim: _selectedHorarioFim,
-        diaSemana: _selectedDiaSemana,
         professoresIds: _selectedProfessoresIds,
         professoresNomes: _professores
             .where((p) => _selectedProfessoresIds.contains(p.id))
@@ -260,109 +180,7 @@ class _WidgetCadastroTurmasState extends State<WidgetCadastroTurmas> {
                         style: const TextStyle(color: Colors.white),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'O nome da turma é obrigatório';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedDiaSemana,
-                        decoration: const InputDecoration(
-                          labelText: 'Dia da Semana',
-                          labelStyle: TextStyle(color: Colors.amber),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.amber),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.amber),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                        dropdownColor: Colors.grey[850],
-                        items: _diasSemana.map((dia) {
-                          return DropdownMenuItem<String>(
-                            value: dia,
-                            child: Text(dia,
-                                style: const TextStyle(color: Colors.white)),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedDiaSemana = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Selecione um dia da semana';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedHorarioInicio,
-                        decoration: const InputDecoration(
-                          labelText: 'Horário de Início',
-                          labelStyle: TextStyle(color: Colors.amber),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.amber),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.amber),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                        dropdownColor: Colors.grey[850],
-                        items: _horariosDisponiveis.map((horario) {
-                          return DropdownMenuItem<String>(
-                            value: horario,
-                            child: Text(horario,
-                                style: const TextStyle(color: Colors.white)),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedHorarioInicio = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Selecione um horário de início';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedHorarioFim,
-                        decoration: const InputDecoration(
-                          labelText: 'Horário de Fim',
-                          labelStyle: TextStyle(color: Colors.amber),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.amber),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.amber),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                        dropdownColor: Colors.grey[850],
-                        items: _horariosDisponiveis.map((horario) {
-                          return DropdownMenuItem<String>(
-                            value: horario,
-                            child: Text(horario,
-                                style: const TextStyle(color: Colors.white)),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedHorarioFim = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Selecione um horário de fim';
+                            return 'Por favor, insira o nome da turma';
                           }
                           return null;
                         },

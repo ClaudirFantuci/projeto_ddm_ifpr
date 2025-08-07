@@ -94,9 +94,6 @@ class _CadastroAgendamentoState extends State<CadastroAgendamento> {
                   orElse: () => TurmaDTO(
                     id: widget.agendamento!.turmaId,
                     nome: widget.agendamento!.turmaNome ?? '',
-                    horarioInicio: '',
-                    horarioFim: '',
-                    diaSemana: '',
                     professoresIds: [],
                     professoresNomes: [],
                     alunosIds: [],
